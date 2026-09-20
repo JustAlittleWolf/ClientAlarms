@@ -52,6 +52,9 @@ public final class Notifier {
 
     private static void send(Component component, boolean forceChat) {
         Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.level == null || minecraft.player == null) {
+            return;
+        }
         if (usesChat(forceChat)) {
             minecraft.gui.getChat().addClientSystemMessage(component);
             return;
