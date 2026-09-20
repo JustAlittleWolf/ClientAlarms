@@ -57,11 +57,18 @@ public final class DateTimeParser {
 
     public static String formatWall(ZonedDateTime time, DateOrder dateOrder) {
         LocalDate date = time.toLocalDate();
-        LocalTime localTime = time.toLocalTime().withNano(0);
+        LocalTime localTime = time.toLocalTime();
         String datePart = dateOrder == DateOrder.MONTH_DAY
             ? "%d/%d/%d".formatted(date.getMonthValue(), date.getDayOfMonth(), date.getYear())
             : "%d/%d/%d".formatted(date.getDayOfMonth(), date.getMonthValue(), date.getYear());
-        return "%s %02d:%02d".formatted(datePart, localTime.getHour(), localTime.getMinute());
+        int millis = localTime.getNano() / 1_000_000;
+        return "%s %02d:%02d:%02d.%03d".formatted(
+            datePart,
+            localTime.getHour(),
+            localTime.getMinute(),
+            localTime.getSecond(),
+            millis
+        );
     }
 
     private static LocalTime parseTime(String raw) {

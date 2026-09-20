@@ -10,18 +10,12 @@ public final class TrackableText {
     }
 
     public static String elapsed(Trackable trackable) {
-        if (trackable.clockMode == ClockMode.TICKS_PLAYING) {
-            return DurationParser.formatTicks(trackable.elapsedTicks);
-        }
-        return DurationParser.formatMillis(trackable.elapsedMillis);
+        return format(trackable, trackable.elapsedMillis, trackable.elapsedTicks);
     }
 
     public static String remaining(Trackable trackable) {
         if (trackable.kind == TrackableKind.STOPWATCH) {
             return elapsed(trackable);
-        }
-        if (trackable.clockMode == ClockMode.TICKS_PLAYING) {
-            return DurationParser.formatTicks(Math.max(0, trackable.durationTicks - trackable.elapsedTicks));
         }
         if (trackable.kind == TrackableKind.ALARM) {
             Minecraft minecraft = Minecraft.getInstance();
@@ -33,32 +27,25 @@ public final class TrackableText {
                     long remainingDays = Math.max(0, trackable.targetDay - Math.max(0, current));
                     yield remainingDays + "d";
                 }
-                default -> DurationParser.formatMillis(Math.max(0, trackable.durationMillis - trackable.elapsedMillis));
+                default -> format(trackable, Math.max(0, trackable.durationMillis - trackable.elapsedMillis), Math.max(0, trackable.durationTicks - trackable.elapsedTicks));
             };
         }
-        return DurationParser.formatMillis(Math.max(0, trackable.durationMillis - trackable.elapsedMillis));
+        return format(
+            trackable,
+            Math.max(0, trackable.durationMillis - trackable.elapsedMillis),
+            Math.max(0, trackable.durationTicks - trackable.elapsedTicks)
+        );
     }
 
     public static String duration(Trackable trackable) {
         if (trackable.kind == TrackableKind.ALARM) {
             return trackable.targetDisplay == null ? "" : trackable.targetDisplay;
         }
-        if (trackable.clockMode == ClockMode.TICKS_PLAYING) {
-            return DurationParser.formatTicks(trackable.durationTicks);
-        }
-        return trackable.durationRaw == null || trackable.durationRaw.isBlank()
-            ? DurationParser.formatMillis(trackable.durationMillis)
-            : trackable.durationRaw;
+        return format(trackable, trackable.durationMillis, trackable.durationTicks);
     }
 
     public static String repeatDuration(Trackable trackable) {
-        if (trackable.repeatRaw != null && !trackable.repeatRaw.isBlank()) {
-            return trackable.repeatRaw;
-        }
-        if (trackable.clockMode == ClockMode.TICKS_PLAYING) {
-            return DurationParser.formatTicks(trackable.repeatTicks);
-        }
-        return DurationParser.formatMillis(trackable.repeatMillis);
+        return format(trackable, trackable.repeatMillis, trackable.repeatTicks);
     }
 
     public static String target(Trackable trackable) {
@@ -66,5 +53,12 @@ public final class TrackableText {
             return duration(trackable);
         }
         return trackable.targetDisplay;
+    }
+
+    private static String format(Trackable trackable, long millis, long ticks) {
+        if (trackable.clockMode == ClockMode.TICKS_PLAYING) {
+            return DurationParser.formatPlayingTicks(ticks);
+        }
+        return DurationParser.formatMillis(millis);
     }
 }

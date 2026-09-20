@@ -19,19 +19,11 @@ public final class SuggestionsUtil {
     }
 
     public static CompletableFuture<Suggestions> durations(SuggestionsBuilder builder) {
-        return SharedSuggestionProvider.suggest(List.of("10s", "30s", "1min", "5min", "10min", "1h", "1h30min", "20t", "1d"), builder);
+        return SharedSuggestionProvider.suggest(List.of("20t", "10s", "5min", "1h", "1d"), builder);
     }
 
     public static CompletableFuture<Suggestions> alarmTimes(SuggestionsBuilder builder) {
-        return SharedSuggestionProvider.suggest(List.of(
-            "12:00",
-            "18:00",
-            "2:00pm",
-            "9:00am",
-            "1000t",
-            "1d",
-            "5d"
-        ), builder);
+        return SharedSuggestionProvider.suggest(List.of("18:00", "2:00pm", "1000t", "1d"), builder);
     }
 
     public static CompletableFuture<Suggestions> clockModes(SuggestionsBuilder builder) {
