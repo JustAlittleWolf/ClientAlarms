@@ -1,11 +1,11 @@
-package me.wolfii.clienttimers.notify;
+package me.wolfii.clienttimers.sound;
 
 import dev.isxander.yacl3.gui.YACLScreen;
 import me.wolfii.clienttimers.client.ClientTimersClient;
 import me.wolfii.clienttimers.config.AlarmNote;
 import me.wolfii.clienttimers.config.Config;
 import me.wolfii.clienttimers.config.SoundVolumeMode;
-import me.wolfii.clienttimers.engine.Trackable;
+import me.wolfii.clienttimers.timer.Trackable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.tabs.Tab;
 import net.minecraft.client.gui.screens.Screen;
@@ -23,6 +23,7 @@ import java.util.Optional;
 
 public final class SoundPlayer {
     private static final List<SoundInstance> PREVIEW = new ArrayList<>();
+    private static final List<SoundInstance> RINGING = new ArrayList<>();
     private static boolean previewing;
     private static int previewTick;
 
@@ -72,11 +73,11 @@ public final class SoundPlayer {
     public static void stopPreview(Minecraft minecraft) {
         previewing = false;
         previewTick = 0;
-        Iterator<SoundInstance> iterator = PREVIEW.iterator();
-        while (iterator.hasNext()) {
-            minecraft.getSoundManager().stop(iterator.next());
-            iterator.remove();
-        }
+        stopAll(minecraft, PREVIEW);
+    }
+
+    public static void stopRinging(Minecraft minecraft) {
+        stopAll(minecraft, RINGING);
     }
 
     public static boolean isPreviewing() {
@@ -117,6 +118,8 @@ public final class SoundPlayer {
         minecraft.getSoundManager().play(instance);
         if (preview) {
             PREVIEW.add(instance);
+        } else {
+            RINGING.add(instance);
         }
     }
 
@@ -137,6 +140,14 @@ public final class SoundPlayer {
             return Identifier.parse(id.contains(":") ? id.trim() : "minecraft:" + id.trim());
         } catch (Exception exception) {
             return null;
+        }
+    }
+
+    private static void stopAll(Minecraft minecraft, List<SoundInstance> instances) {
+        Iterator<SoundInstance> iterator = instances.iterator();
+        while (iterator.hasNext()) {
+            minecraft.getSoundManager().stop(iterator.next());
+            iterator.remove();
         }
     }
 

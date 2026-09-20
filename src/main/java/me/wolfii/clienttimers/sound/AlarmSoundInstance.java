@@ -1,4 +1,4 @@
-package me.wolfii.clienttimers.notify;
+package me.wolfii.clienttimers.sound;
 
 import me.wolfii.clienttimers.config.Config;
 import me.wolfii.clienttimers.config.SoundVolumeMode;

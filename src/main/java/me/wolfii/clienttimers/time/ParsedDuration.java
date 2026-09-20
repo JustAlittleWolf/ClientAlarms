@@ -18,8 +18,4 @@ public record ParsedDuration(long extraTicks, long extraMillis, String raw) {
     public boolean isZero() {
         return extraTicks <= 0 && extraMillis <= 0;
     }
-
-    public ParsedDuration plus(ParsedDuration other) {
-        return new ParsedDuration(extraTicks + other.extraTicks, extraMillis + other.extraMillis, raw + other.raw);
-    }
 }

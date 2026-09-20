@@ -1,8 +1,21 @@
 package me.wolfii.clienttimers.config;
 
-import dev.isxander.yacl3.api.*;
-import dev.isxander.yacl3.api.controller.*;
-import me.wolfii.clienttimers.notify.SoundPlayer;
+import dev.isxander.yacl3.api.ButtonOption;
+import dev.isxander.yacl3.api.ConfigCategory;
+import dev.isxander.yacl3.api.LabelOption;
+import dev.isxander.yacl3.api.ListOption;
+import dev.isxander.yacl3.api.Option;
+import dev.isxander.yacl3.api.OptionDescription;
+import dev.isxander.yacl3.api.OptionGroup;
+import dev.isxander.yacl3.api.YetAnotherConfigLib;
+import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
+import dev.isxander.yacl3.api.controller.CyclingListControllerBuilder;
+import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
+import dev.isxander.yacl3.api.controller.FloatSliderControllerBuilder;
+import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
+import dev.isxander.yacl3.api.controller.StringControllerBuilder;
+import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
+import me.wolfii.clienttimers.sound.SoundPlayer;
 import me.wolfii.clienttimers.time.DateOrder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -38,24 +51,8 @@ public final class ConfigScreenFactory {
             .option(bool("messageOnComplete", () -> config.messageOnComplete, value -> config.messageOnComplete = value, true))
             .option(bool("messageOnStart", () -> config.messageOnStart, value -> config.messageOnStart = value, true))
             .option(bool("messageOnInfo", () -> config.messageOnInfo, value -> config.messageOnInfo = value, true))
-            .option(Option.<MessageDisplay>createBuilder()
-                .name(Component.translatable("clienttimers.config.messageDisplay"))
-                .description(OptionDescription.of(Component.translatable("clienttimers.config.messageDisplay.desc")))
-                .binding(MessageDisplay.CHAT, () -> config.messageDisplay, value -> config.messageDisplay = value)
-                .controller(opt -> EnumControllerBuilder.create(opt).enumClass(MessageDisplay.class))
-                .build())
-            .option(Option.<DateOrder>createBuilder()
-                .name(Component.translatable("clienttimers.config.dateOrder"))
-                .description(OptionDescription.of(Component.translatable("clienttimers.config.dateOrder.desc")))
-                .binding(DateOrder.MONTH_DAY, () -> config.dateOrder, value -> config.dateOrder = value)
-                .controller(opt -> EnumControllerBuilder.create(opt).enumClass(DateOrder.class))
-                .build())
-            .option(string("alarmEndedFormat", () -> config.alarmEndedFormat, value -> config.alarmEndedFormat = value, ""))
-            .option(string("timerEndedFormat", () -> config.timerEndedFormat, value -> config.timerEndedFormat = value, ""))
-            .option(string("stopwatchStoppedFormat", () -> config.stopwatchStoppedFormat, value -> config.stopwatchStoppedFormat = value, ""))
-            .option(string("alarmStartedFormat", () -> config.alarmStartedFormat, value -> config.alarmStartedFormat = value, ""))
-            .option(string("timerStartedFormat", () -> config.timerStartedFormat, value -> config.timerStartedFormat = value, ""))
-            .option(string("stopwatchStartedFormat", () -> config.stopwatchStartedFormat, value -> config.stopwatchStartedFormat = value, ""))
+            .option(enumerated("messageDisplay", MessageDisplay.class, MessageDisplay.CHAT, () -> config.messageDisplay, value -> config.messageDisplay = value, true))
+            .option(enumerated("dateOrder", DateOrder.class, DateOrder.MONTH_DAY, () -> config.dateOrder, value -> config.dateOrder = value, true))
             .build();
     }
 
@@ -63,14 +60,8 @@ public final class ConfigScreenFactory {
         return ConfigCategory.createBuilder()
             .name(Component.translatable("clienttimers.config.overlay"))
             .option(bool("overlayByDefault", () -> config.overlayByDefault, value -> config.overlayByDefault = value, true))
-            .option(bool("screenActionButtons", () -> config.screenActionButtons, value -> config.screenActionButtons = value, true))
             .option(bool("silentByDefault", () -> config.silentByDefault, value -> config.silentByDefault = value, false))
-            .option(Option.<Integer>createBuilder()
-                .name(Component.translatable("clienttimers.config.autoStopAfterRings"))
-                .description(OptionDescription.of(Component.translatable("clienttimers.config.autoStopAfterRings.desc")))
-                .binding(0, () -> config.autoStopAfterRings, value -> config.autoStopAfterRings = value)
-                .controller(opt -> IntegerSliderControllerBuilder.create(opt).range(0, 20).step(1))
-                .build())
+            .option(intSlider("autoStopAfterRings", 0, 20, 0, () -> config.autoStopAfterRings, value -> config.autoStopAfterRings = value, true))
             .group(overlayGroup("alarm", config.alarmOverlay))
             .group(overlayGroup("timer", config.timerOverlay))
             .group(overlayGroup("stopwatch", config.stopwatchOverlay))
@@ -85,31 +76,11 @@ public final class ConfigScreenFactory {
             .option(string("heading", () -> settings.heading, value -> settings.heading = value, ""))
             .option(string("overlayFormat", () -> settings.format, value -> settings.format = value, ""))
             .option(string("nameFormat", () -> settings.nameFormat, value -> settings.nameFormat = value, "%name%"))
-            .option(Option.<OverlayAnchorX>createBuilder()
-                .name(Component.translatable("clienttimers.config.anchorX"))
-                .binding(OverlayAnchorX.LEFT, () -> settings.anchorX, value -> settings.anchorX = value)
-                .controller(opt -> EnumControllerBuilder.create(opt).enumClass(OverlayAnchorX.class))
-                .build())
-            .option(Option.<OverlayAnchorY>createBuilder()
-                .name(Component.translatable("clienttimers.config.anchorY"))
-                .binding(OverlayAnchorY.TOP, () -> settings.anchorY, value -> settings.anchorY = value)
-                .controller(opt -> EnumControllerBuilder.create(opt).enumClass(OverlayAnchorY.class))
-                .build())
-            .option(Option.<Integer>createBuilder()
-                .name(Component.translatable("clienttimers.config.offsetX"))
-                .binding(8, () -> settings.offsetX, value -> settings.offsetX = value)
-                .controller(opt -> IntegerSliderControllerBuilder.create(opt).range(-400, 400).step(1))
-                .build())
-            .option(Option.<Integer>createBuilder()
-                .name(Component.translatable("clienttimers.config.offsetY"))
-                .binding(8, () -> settings.offsetY, value -> settings.offsetY = value)
-                .controller(opt -> IntegerSliderControllerBuilder.create(opt).range(-400, 400).step(1))
-                .build())
-            .option(Option.<TextAlign>createBuilder()
-                .name(Component.translatable("clienttimers.config.align"))
-                .binding(TextAlign.LEFT, () -> settings.align, value -> settings.align = value)
-                .controller(opt -> EnumControllerBuilder.create(opt).enumClass(TextAlign.class))
-                .build())
+            .option(enumerated("anchorX", OverlayAnchorX.class, OverlayAnchorX.LEFT, () -> settings.anchorX, value -> settings.anchorX = value, false))
+            .option(enumerated("anchorY", OverlayAnchorY.class, OverlayAnchorY.TOP, () -> settings.anchorY, value -> settings.anchorY = value, false))
+            .option(intSlider("offsetX", -400, 400, 8, () -> settings.offsetX, value -> settings.offsetX = value, false))
+            .option(intSlider("offsetY", -400, 400, 8, () -> settings.offsetY, value -> settings.offsetY = value, false))
+            .option(enumerated("align", TextAlign.class, TextAlign.LEFT, () -> settings.align, value -> settings.align = value, false))
             .build();
     }
 
@@ -120,27 +91,19 @@ public final class ConfigScreenFactory {
         return ConfigCategory.createBuilder()
             .name(Component.translatable("clienttimers.config.sound"))
             .option(bool("playSounds", () -> config.playSounds, value -> config.playSounds = value, true))
-            .option(Option.<SoundVolumeMode>createBuilder()
-                .name(Component.translatable("clienttimers.config.soundVolumeMode"))
-                .description(OptionDescription.of(Component.translatable("clienttimers.config.soundVolumeMode.desc")))
-                .binding(SoundVolumeMode.ALARM, () -> config.soundVolumeMode, value -> config.soundVolumeMode = value)
-                .controller(opt -> EnumControllerBuilder.create(opt).enumClass(SoundVolumeMode.class))
-                .build())
+            .option(enumerated("soundVolumeMode", SoundVolumeMode.class, SoundVolumeMode.ALARM, () -> config.soundVolumeMode, value -> config.soundVolumeMode = value, true))
             .option(Option.<Float>createBuilder()
                 .name(Component.translatable("clienttimers.config.masterVolume"))
                 .binding(1.0f, () -> config.masterVolume, value -> config.masterVolume = value)
                 .controller(opt -> FloatSliderControllerBuilder.create(opt).range(0.0f, 2.0f).step(0.05f))
                 .build())
-            .option(Option.<Integer>createBuilder()
-                .name(Component.translatable("clienttimers.config.silenceTicks"))
-                .description(OptionDescription.of(Component.translatable("clienttimers.config.silenceTicks.desc")))
-                .binding(40, () -> config.silenceTicksBetweenRepeats, value -> config.silenceTicksBetweenRepeats = value)
-                .controller(opt -> IntegerSliderControllerBuilder.create(opt).range(0, 200).step(1))
-                .build())
+            .option(intSlider("silenceTicks", 0, 200, 40, () -> config.silenceTicksBetweenRepeats, value -> config.silenceTicksBetweenRepeats = value, true))
             .option(Option.<String>createBuilder()
                 .name(Component.translatable("clienttimers.config.preset"))
-                .binding("Pling", () -> config.selectedPreset, config::applyPreset)
-                .controller(opt -> CyclingListControllerBuilder.create(opt).values(presetNames))
+                .binding(presetNames.getFirst(), () -> config.selectedPreset, config::applyPreset)
+                .controller(opt -> CyclingListControllerBuilder.create(opt)
+                    .values(presetNames)
+                    .formatValue(Component::literal))
                 .build())
             .option(Option.<String>createBuilder()
                 .name(Component.translatable("clienttimers.config.presetName"))
@@ -181,10 +144,15 @@ public final class ConfigScreenFactory {
     private static void refreshPresetNames(Config config, List<String> presetNames) {
         presetNames.clear();
         for (SoundPreset preset : config.presets) {
-            presetNames.add(preset.name);
+            if (preset.name != null && !preset.name.isBlank()) {
+                presetNames.add(preset.name);
+            }
         }
         if (presetNames.isEmpty()) {
             presetNames.add("Pling");
+        }
+        if (config.selectedPreset == null || !presetNames.contains(config.selectedPreset)) {
+            config.selectedPreset = presetNames.getFirst();
         }
     }
 
@@ -198,12 +166,53 @@ public final class ConfigScreenFactory {
     }
 
     private static Option<String> string(String key, Supplier<String> getter, Consumer<String> setter, String def) {
-        return Option.<String>createBuilder()
+        var builder = Option.<String>createBuilder()
             .name(Component.translatable("clienttimers.config." + key))
-            .description(OptionDescription.of(Component.translatable("clienttimers.config." + key + ".desc")))
             .binding(def, getter, setter)
-            .controller(StringControllerBuilder::create)
-            .build();
+            .controller(StringControllerBuilder::create);
+        describe(builder, key);
+        return builder.build();
+    }
+
+    private static Option<Integer> intSlider(
+        String key,
+        int min,
+        int max,
+        int def,
+        Supplier<Integer> getter,
+        Consumer<Integer> setter,
+        boolean description
+    ) {
+        var builder = Option.<Integer>createBuilder()
+            .name(Component.translatable("clienttimers.config." + key))
+            .binding(def, getter, setter)
+            .controller(opt -> IntegerSliderControllerBuilder.create(opt).range(min, max).step(1));
+        if (description) {
+            describe(builder, key);
+        }
+        return builder.build();
+    }
+
+    private static <T extends Enum<T>> Option<T> enumerated(
+        String key,
+        Class<T> type,
+        T def,
+        Supplier<T> getter,
+        Consumer<T> setter,
+        boolean description
+    ) {
+        var builder = Option.<T>createBuilder()
+            .name(Component.translatable("clienttimers.config." + key))
+            .binding(def, getter, setter)
+            .controller(opt -> EnumControllerBuilder.create(opt).enumClass(type));
+        if (description) {
+            describe(builder, key);
+        }
+        return builder.build();
+    }
+
+    private static <T> void describe(Option.Builder<T> builder, String key) {
+        builder.description(OptionDescription.of(Component.translatable("clienttimers.config." + key + ".desc")));
     }
 
     private static List<String> encodeNotes(List<AlarmNote> notes) {

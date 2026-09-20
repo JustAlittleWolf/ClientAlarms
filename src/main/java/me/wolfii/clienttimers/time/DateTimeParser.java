@@ -1,5 +1,7 @@
 package me.wolfii.clienttimers.time;
 
+import me.wolfii.clienttimers.timer.AlarmTarget;
+
 import java.time.*;
 import java.util.Locale;
 import java.util.regex.Matcher;

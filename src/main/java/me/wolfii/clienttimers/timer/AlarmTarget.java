@@ -1,4 +1,4 @@
-package me.wolfii.clienttimers.time;
+package me.wolfii.clienttimers.timer;
 
 import java.time.ZonedDateTime;
 

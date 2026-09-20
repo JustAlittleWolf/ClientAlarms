@@ -7,13 +7,19 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import me.wolfii.clienttimers.chat.Notifier;
+import me.wolfii.clienttimers.chat.TimerMessages;
 import me.wolfii.clienttimers.config.Config;
-import me.wolfii.clienttimers.engine.AlarmEngine;
-import me.wolfii.clienttimers.engine.Trackable;
-import me.wolfii.clienttimers.engine.TrackableKind;
-import me.wolfii.clienttimers.notify.MessageFormats;
-import me.wolfii.clienttimers.notify.Notifier;
-import me.wolfii.clienttimers.time.*;
+import me.wolfii.clienttimers.time.ClockMode;
+import me.wolfii.clienttimers.time.DateTimeParser;
+import me.wolfii.clienttimers.time.DurationParser;
+import me.wolfii.clienttimers.time.ParsedDuration;
+import me.wolfii.clienttimers.timer.AlarmEngine;
+import me.wolfii.clienttimers.timer.AlarmTarget;
+import me.wolfii.clienttimers.timer.Trackable;
+import me.wolfii.clienttimers.timer.TrackableKind;
+import me.wolfii.clienttimers.world.WorldKeys;
+import me.wolfii.clienttimers.world.WorldScope;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -133,12 +139,15 @@ public final class ClientAlarmCommands {
 
     private static void attachActions(LiteralArgumentBuilder<FabricClientCommandSource> command, TrackableKind kind, boolean includeSilent) {
         command.then(ClientCommands.literal("list").executes(context -> list(kind)));
-        attachNamed(command, "stop", kind, name -> AlarmEngine.stop(kind, name, true) ? 1 : fail());
-        attachNamed(command, "progress", kind, name -> AlarmEngine.progress(kind, name) ? 1 : fail());
-        attachNamed(command, "hide", kind, name -> AlarmEngine.setOverlay(kind, name, false) ? 1 : fail());
-        attachNamed(command, "show", kind, name -> AlarmEngine.setOverlay(kind, name, true) ? 1 : fail());
-        if (includeSilent) {
-            attachNamed(command, "silent", kind, name -> AlarmEngine.toggleSilent(kind, name) ? 1 : fail());
+        for (String action : CommandTokens.actions(includeSilent)) {
+            attachNamed(command, action, kind, name -> switch (action) {
+                case "stop" -> AlarmEngine.stop(kind, name, true) ? 1 : fail();
+                case "progress" -> AlarmEngine.progress(kind, name) ? 1 : fail();
+                case "hide" -> AlarmEngine.setOverlay(kind, name, false) ? 1 : fail();
+                case "show" -> AlarmEngine.setOverlay(kind, name, true) ? 1 : fail();
+                case "silent" -> AlarmEngine.toggleSilent(kind, name) ? 1 : fail();
+                default -> fail();
+            });
         }
     }
 
@@ -193,12 +202,12 @@ public final class ClientAlarmCommands {
     private static int list(TrackableKind kind) {
         List<Trackable> entries = AlarmEngine.ofKind(kind);
         if (entries.isEmpty()) {
-            Notifier.list(Component.translatable("clienttimers.list.empty." + kind.name().toLowerCase()));
+            Notifier.list(TimerMessages.listEmpty(kind));
             return 1;
         }
-        Notifier.list(Component.translatable("clienttimers.list.header." + kind.name().toLowerCase()));
+        Notifier.list(TimerMessages.listHeader(kind));
         for (Trackable entry : entries) {
-            Notifier.list(Component.literal(" - " + MessageFormats.overlayLine(entry)));
+            Notifier.list(TimerMessages.listLine(entry));
         }
         return 1;
     }

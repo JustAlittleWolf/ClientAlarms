@@ -1,7 +1,7 @@
-package me.wolfii.clienttimers.engine;
+package me.wolfii.clienttimers.timer;
 
 import me.wolfii.clienttimers.time.ClockMode;
-import me.wolfii.clienttimers.time.WorldScope;
+import me.wolfii.clienttimers.world.WorldScope;
 
 public class Trackable {
     public TrackableKind kind = TrackableKind.TIMER;
@@ -34,6 +34,7 @@ public class Trackable {
     public boolean completed;
     public boolean missed;
     public boolean ringing;
+    public boolean pendingJoinRing;
     public int ringsCompleted;
     public long snoozeUntilEpoch;
     public int soundCycleTick = -1;
