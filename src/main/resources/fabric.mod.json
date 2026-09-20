@@ -23,7 +23,7 @@
     ]
   },
   "mixins": [
-    "clientalarms.mixins.json"
+    "clienttimers.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.19.0",
