@@ -4,7 +4,6 @@ import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
 import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
 import me.wolfii.clienttimers.time.DateOrder;
-import me.wolfii.clienttimers.timer.TrackableKind;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.Identifier;
@@ -37,15 +36,6 @@ public class Config {
     @SerialEntry
     public DateOrder dateOrder = DateOrder.MONTH_DAY;
 
-    @SerialEntry
-    public OverlaySettings alarmOverlay = new OverlaySettings();
-    @SerialEntry
-    public OverlaySettings timerOverlay = OverlaySettings.at(8, 40);
-    @SerialEntry
-    public OverlaySettings stopwatchOverlay = OverlaySettings.at(8, 80);
-
-    @SerialEntry
-    public boolean overlayByDefault = true;
     @SerialEntry
     public boolean silentByDefault = false;
     @SerialEntry
@@ -101,42 +91,64 @@ public class Config {
     }
 
     public void save() {
+        syncLegacyFields();
         HANDLER.save();
     }
 
-    public OverlaySettings overlayFor(TrackableKind kind) {
-        return switch (kind) {
-            case ALARM -> alarmOverlay;
-            case TIMER -> timerOverlay;
-            case STOPWATCH -> stopwatchOverlay;
-        };
-    }
-
     public void ensureDefaults() {
-        if (alarmOverlay == null) alarmOverlay = new OverlaySettings();
-        if (timerOverlay == null) timerOverlay = new OverlaySettings();
-        if (stopwatchOverlay == null) stopwatchOverlay = new OverlaySettings();
-        if (notes == null) notes = new ArrayList<>();
-        if (presets == null) presets = new ArrayList<>();
+        if (notes == null) {
+            notes = new ArrayList<>();
+        }
+        if (presets == null) {
+            presets = new ArrayList<>();
+        }
         if (presets.isEmpty()) {
             presets.addAll(defaultPresets());
         }
-        if (notes.isEmpty()) {
-            applyPreset(selectedPreset);
+        for (SoundPreset preset : presets) {
+            if (preset.notes == null) {
+                preset.notes = new ArrayList<>();
+            } else {
+                preset.setNotes(preset.notes);
+            }
         }
+        if (!notes.isEmpty()) {
+            selected().setNotes(notes);
+            selected().silenceTicks = silenceTicksBetweenRepeats;
+        }
+        selectPreset(selectedPreset);
+        syncLegacyFields();
     }
 
-    public void applyPreset(String name) {
+    public SoundPreset selected() {
+        SoundPreset found = findPreset(selectedPreset);
+        if (found != null) {
+            return found;
+        }
+        if (presets.isEmpty()) {
+            presets.addAll(defaultPresets());
+        }
+        selectedPreset = presets.getFirst().name;
+        return presets.getFirst();
+    }
+
+    public SoundPreset findPreset(String name) {
+        if (name == null || name.isBlank()) {
+            return null;
+        }
         for (SoundPreset preset : presets) {
-            if (preset.name.equalsIgnoreCase(name)) {
-                selectedPreset = preset.name;
-                silenceTicksBetweenRepeats = preset.silenceTicks;
-                notes = new ArrayList<>();
-                for (AlarmNote note : preset.notes) {
-                    notes.add(note.copy());
-                }
-                return;
+            if (preset.name != null && preset.name.equalsIgnoreCase(name)) {
+                return preset;
             }
+        }
+        return null;
+    }
+
+    public void selectPreset(String name) {
+        SoundPreset found = findPreset(name);
+        if (found != null) {
+            selectedPreset = found.name;
+            syncLegacyFields();
         }
     }
 
@@ -144,19 +156,19 @@ public class Config {
         if (name == null || name.isBlank()) {
             return;
         }
-        SoundPreset preset = new SoundPreset(name.trim(), silenceTicksBetweenRepeats, new ArrayList<>());
-        for (AlarmNote note : notes) {
-            preset.notes.add(note.copy());
-        }
-        presets.removeIf(existing -> existing.name.equalsIgnoreCase(preset.name));
-        presets.add(preset);
-        selectedPreset = preset.name;
+        SoundPreset created = selected().copy();
+        created.name = name.trim();
+        presets.removeIf(existing -> existing.name != null && existing.name.equalsIgnoreCase(created.name));
+        presets.add(created);
+        selectedPreset = created.name;
+        syncLegacyFields();
     }
 
     public int cycleLengthTicks() {
+        SoundPreset preset = selected();
         int last = 0;
         boolean any = false;
-        for (AlarmNote note : notes) {
+        for (AlarmNote note : preset.notes) {
             if (!note.isPlayable()) {
                 continue;
             }
@@ -164,8 +176,17 @@ public class Config {
             any = true;
         }
         if (!any) {
-            return Math.max(1, silenceTicksBetweenRepeats);
+            return Math.max(1, preset.silenceTicks);
         }
-        return last + Math.max(0, silenceTicksBetweenRepeats);
+        return last + Math.max(0, preset.silenceTicks);
+    }
+
+    private void syncLegacyFields() {
+        SoundPreset preset = selected();
+        silenceTicksBetweenRepeats = preset.silenceTicks;
+        notes = new ArrayList<>();
+        for (AlarmNote note : preset.notes) {
+            notes.add(note.copy());
+        }
     }
 }

@@ -6,7 +6,6 @@ import dev.isxander.yacl3.api.LabelOption;
 import dev.isxander.yacl3.api.ListOption;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
-import dev.isxander.yacl3.api.OptionGroup;
 import dev.isxander.yacl3.api.YetAnotherConfigLib;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
 import dev.isxander.yacl3.api.controller.CyclingListControllerBuilder;
@@ -39,7 +38,6 @@ public final class ConfigScreenFactory {
                 config.save();
             })
             .category(messages(config))
-            .category(overlay(config))
             .category(sound(config))
             .build()
             .generateScreen(parent);
@@ -53,41 +51,56 @@ public final class ConfigScreenFactory {
             .option(bool("messageOnInfo", () -> config.messageOnInfo, value -> config.messageOnInfo = value, true))
             .option(enumerated("messageDisplay", MessageDisplay.class, MessageDisplay.CHAT, () -> config.messageDisplay, value -> config.messageDisplay = value, true))
             .option(enumerated("dateOrder", DateOrder.class, DateOrder.MONTH_DAY, () -> config.dateOrder, value -> config.dateOrder = value, true))
-            .build();
-    }
-
-    private static ConfigCategory overlay(Config config) {
-        return ConfigCategory.createBuilder()
-            .name(Component.translatable("clienttimers.config.overlay"))
-            .option(bool("overlayByDefault", () -> config.overlayByDefault, value -> config.overlayByDefault = value, true))
             .option(bool("silentByDefault", () -> config.silentByDefault, value -> config.silentByDefault = value, false))
             .option(intSlider("autoStopAfterRings", 0, 20, 0, () -> config.autoStopAfterRings, value -> config.autoStopAfterRings = value, true))
-            .group(overlayGroup("alarm", config.alarmOverlay))
-            .group(overlayGroup("timer", config.timerOverlay))
-            .group(overlayGroup("stopwatch", config.stopwatchOverlay))
-            .build();
-    }
-
-    private static OptionGroup overlayGroup(String key, OverlaySettings settings) {
-        return OptionGroup.createBuilder()
-            .name(Component.translatable("clienttimers.config.overlay." + key))
-            .option(bool("overlayEnabled", () -> settings.enabled, value -> settings.enabled = value, true))
-            .option(bool("showHeading", () -> settings.showHeading, value -> settings.showHeading = value, true))
-            .option(string("heading", () -> settings.heading, value -> settings.heading = value, ""))
-            .option(string("overlayFormat", () -> settings.format, value -> settings.format = value, ""))
-            .option(string("nameFormat", () -> settings.nameFormat, value -> settings.nameFormat = value, "%name%"))
-            .option(enumerated("anchorX", OverlayAnchorX.class, OverlayAnchorX.LEFT, () -> settings.anchorX, value -> settings.anchorX = value, false))
-            .option(enumerated("anchorY", OverlayAnchorY.class, OverlayAnchorY.TOP, () -> settings.anchorY, value -> settings.anchorY = value, false))
-            .option(intSlider("offsetX", -400, 400, 8, () -> settings.offsetX, value -> settings.offsetX = value, false))
-            .option(intSlider("offsetY", -400, 400, 8, () -> settings.offsetY, value -> settings.offsetY = value, false))
-            .option(enumerated("align", TextAlign.class, TextAlign.LEFT, () -> settings.align, value -> settings.align = value, false))
             .build();
     }
 
     private static ConfigCategory sound(Config config) {
         String[] saveName = {""};
+        boolean[] syncing = {false};
         List<String> presetNames = new ArrayList<>();
         refreshPresetNames(config, presetNames);
+        SoundPreset current = config.selected();
+
+        ListOption<String> notes = ListOption.<String>createBuilder()
+            .name(Component.translatable("clienttimers.config.notes"))
+            .binding(encodeNotes(current.notes), () -> encodeNotes(config.selected().notes), values -> config.selected().setNotes(decodeNotes(values)))
+            .controller(StringControllerBuilder::create)
+            .initial("minecraft:block.note_block.pling,1.0,1.0,0")
+            .listener((option, values) -> {
+                if (!syncing[0]) {
+                    config.selected().setNotes(decodeNotes(values));
+                }
+            })
+            .build();
+
+        Option<Integer> silence = Option.<Integer>createBuilder()
+            .name(Component.translatable("clienttimers.config.silenceTicks"))
+            .description(OptionDescription.of(Component.translatable("clienttimers.config.silenceTicks.desc")))
+            .binding(40, () -> config.selected().silenceTicks, value -> config.selected().silenceTicks = value)
+            .controller(opt -> IntegerSliderControllerBuilder.create(opt).range(0, 200).step(1))
+            .instant(true)
+            .build();
+
+        Option<String> preset = Option.<String>createBuilder()
+            .name(Component.translatable("clienttimers.config.preset"))
+            .description(OptionDescription.of(Component.translatable("clienttimers.config.preset.desc")))
+            .binding(presetNames.getFirst(), () -> config.selectedPreset, config::selectPreset)
+            .controller(opt -> CyclingListControllerBuilder.create(opt)
+                .values(presetNames)
+                .formatValue(Component::literal))
+            .instant(true)
+            .listener((option, name) -> {
+                syncing[0] = true;
+                config.selectPreset(name);
+                SoundPreset selected = config.selected();
+                silence.requestSet(selected.silenceTicks);
+                notes.requestSet(encodeNotes(selected.notes));
+                syncing[0] = false;
+            })
+            .build();
+
         return ConfigCategory.createBuilder()
             .name(Component.translatable("clienttimers.config.sound"))
             .option(bool("playSounds", () -> config.playSounds, value -> config.playSounds = value, true))
@@ -97,14 +110,8 @@ public final class ConfigScreenFactory {
                 .binding(1.0f, () -> config.masterVolume, value -> config.masterVolume = value)
                 .controller(opt -> FloatSliderControllerBuilder.create(opt).range(0.0f, 2.0f).step(0.05f))
                 .build())
-            .option(intSlider("silenceTicks", 0, 200, 40, () -> config.silenceTicksBetweenRepeats, value -> config.silenceTicksBetweenRepeats = value, true))
-            .option(Option.<String>createBuilder()
-                .name(Component.translatable("clienttimers.config.preset"))
-                .binding(presetNames.getFirst(), () -> config.selectedPreset, config::applyPreset)
-                .controller(opt -> CyclingListControllerBuilder.create(opt)
-                    .values(presetNames)
-                    .formatValue(Component::literal))
-                .build())
+            .option(preset)
+            .option(silence)
             .option(Option.<String>createBuilder()
                 .name(Component.translatable("clienttimers.config.presetName"))
                 .binding("", () -> saveName[0], value -> saveName[0] = value)
@@ -113,10 +120,14 @@ public final class ConfigScreenFactory {
             .option(ButtonOption.createBuilder()
                 .name(Component.translatable("clienttimers.config.savePreset"))
                 .action((screen, option) -> {
-                    if (!saveName[0].isBlank()) {
-                        config.saveCurrentAsPreset(saveName[0]);
-                        refreshPresetNames(config, presetNames);
+                    if (saveName[0].isBlank()) {
+                        return;
                     }
+                    config.selected().silenceTicks = silence.pendingValue();
+                    config.selected().setNotes(decodeNotes(notes.pendingValue()));
+                    config.saveCurrentAsPreset(saveName[0]);
+                    refreshPresetNames(config, presetNames);
+                    preset.requestSet(config.selectedPreset);
                 })
                 .build())
             .option(Option.<Boolean>createBuilder()
@@ -132,27 +143,22 @@ public final class ConfigScreenFactory {
                 .controller(TickBoxControllerBuilder::create)
                 .build())
             .option(LabelOption.create(Component.translatable("clienttimers.config.notes.help")))
-            .group(ListOption.<String>createBuilder()
-                .name(Component.translatable("clienttimers.config.notes"))
-                .binding(encodeNotes(Config.defaultPresets().getFirst().notes), () -> encodeNotes(config.notes), values -> config.notes = decodeNotes(values))
-                .controller(StringControllerBuilder::create)
-                .initial("minecraft:block.note_block.pling,1.0,1.0,0")
-                .build())
+            .group(notes)
             .build();
     }
 
     private static void refreshPresetNames(Config config, List<String> presetNames) {
         presetNames.clear();
-        for (SoundPreset preset : config.presets) {
-            if (preset.name != null && !preset.name.isBlank()) {
-                presetNames.add(preset.name);
+        for (SoundPreset item : config.presets) {
+            if (item.name != null && !item.name.isBlank()) {
+                presetNames.add(item.name);
             }
         }
         if (presetNames.isEmpty()) {
-            presetNames.add("Pling");
+            presetNames.add(config.selected().name);
         }
         if (config.selectedPreset == null || !presetNames.contains(config.selectedPreset)) {
-            config.selectedPreset = presetNames.getFirst();
+            config.selectPreset(presetNames.getFirst());
         }
     }
 
@@ -163,15 +169,6 @@ public final class ConfigScreenFactory {
             .binding(def, getter, setter)
             .controller(opt -> BooleanControllerBuilder.create(opt).yesNoFormatter())
             .build();
-    }
-
-    private static Option<String> string(String key, Supplier<String> getter, Consumer<String> setter, String def) {
-        var builder = Option.<String>createBuilder()
-            .name(Component.translatable("clienttimers.config." + key))
-            .binding(def, getter, setter)
-            .controller(StringControllerBuilder::create);
-        describe(builder, key);
-        return builder.build();
     }
 
     private static Option<Integer> intSlider(
@@ -233,11 +230,11 @@ public final class ConfigScreenFactory {
     }
 
     private static List<AlarmNote> decodeNotes(List<String> values) {
-        List<AlarmNote> notes = new ArrayList<>();
+        List<AlarmNote> decoded = new ArrayList<>();
         for (String value : values) {
-            notes.add(decodeNote(value));
+            decoded.add(decodeNote(value));
         }
-        return notes;
+        return decoded;
     }
 
     private static AlarmNote decodeNote(String value) {

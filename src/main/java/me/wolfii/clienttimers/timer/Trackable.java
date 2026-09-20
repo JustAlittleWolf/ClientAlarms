@@ -6,7 +6,6 @@ import me.wolfii.clienttimers.world.WorldScope;
 public class Trackable {
     public TrackableKind kind = TrackableKind.TIMER;
     public String name = "default";
-    public boolean overlayVisible = true;
     public boolean silent = false;
     public ClockMode clockMode = ClockMode.TIME_PLAYING;
     public WorldScope worldScope = WorldScope.ANY_WORLD;
