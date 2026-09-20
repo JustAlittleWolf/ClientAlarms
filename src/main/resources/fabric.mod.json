@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "clientalarms",
+  "version": "${version}",
+  "name": "ClientAlarms",
+  "description": "Use timers, alarms and a stopwatch fully client side",
+  "authors": [
+    "JustAlittleWolf"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/clientalarms/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "me.wolfii.clientalarms.client.ClientalarmsClient"
+    ]
+  },
+  "mixins": [
+    "clientalarms.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "fabric-api": "*",
+    "minecraft": ">=${minecraft_version}"
+  }
+}
