@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 public final class CommandTokens {
-    public static final Set<String> RESERVED_NAMES = Set.of("stop", "progress", "hide", "show", "list", "silent");
+    public static final Set<String> RESERVED_NAMES = Set.of("stop", "progress", "list", "silent");
 
     private CommandTokens() {
     }
@@ -15,7 +15,7 @@ public final class CommandTokens {
     }
 
     public static List<String> actions(boolean includeSilent) {
-        List<String> actions = new ArrayList<>(List.of("stop", "progress", "hide", "show"));
+        List<String> actions = new ArrayList<>(List.of("stop", "progress"));
         if (includeSilent) {
             actions.add("silent");
         }

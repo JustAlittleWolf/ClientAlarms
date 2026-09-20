@@ -1,6 +1,6 @@
 package me.wolfii.clienttimers.chat;
 
-import me.wolfii.clienttimers.hud.OverlayText;
+import me.wolfii.clienttimers.timer.TrackableText;
 import me.wolfii.clienttimers.time.ClockMode;
 import me.wolfii.clienttimers.timer.StoppedNotice;
 import me.wolfii.clienttimers.timer.Trackable;
@@ -19,7 +19,7 @@ public final class TimerMessages {
                 "clienttimers.message.alarmStarted",
                 kind(trackable.kind),
                 ChatStyle.name(trackable.name),
-                ChatStyle.count(OverlayText.target(trackable))
+                ChatStyle.count(TrackableText.target(trackable))
             );
             case TIMER -> timerStarted(trackable);
             case STOPWATCH -> withExtras(
@@ -35,19 +35,19 @@ public final class TimerMessages {
                 "clienttimers.message.alarmEnded",
                 kind(trackable.kind),
                 ChatStyle.name(trackable.name),
-                ChatStyle.count(OverlayText.target(trackable))
+                ChatStyle.count(TrackableText.target(trackable))
             );
             case TIMER -> ChatStyle.wording(
                 "clienttimers.message.timerEnded",
                 kind(trackable.kind),
                 ChatStyle.name(trackable.name),
-                ChatStyle.duration(OverlayText.elapsed(trackable))
+                ChatStyle.duration(TrackableText.elapsed(trackable))
             );
             case STOPWATCH -> ChatStyle.wording(
                 "clienttimers.message.stopwatchStopped",
                 kind(trackable.kind),
                 ChatStyle.name(trackable.name),
-                ChatStyle.duration(OverlayText.elapsed(trackable))
+                ChatStyle.duration(TrackableText.elapsed(trackable))
             );
         };
         if (trackable.missed) {
@@ -58,8 +58,8 @@ public final class TimerMessages {
 
     public static Component progress(Trackable trackable) {
         Component value = trackable.kind == TrackableKind.STOPWATCH
-            ? ChatStyle.duration(OverlayText.elapsed(trackable))
-            : ChatStyle.wording("clienttimers.message.remaining", ChatStyle.duration(OverlayText.remaining(trackable)));
+            ? ChatStyle.duration(TrackableText.elapsed(trackable))
+            : ChatStyle.wording("clienttimers.message.remaining", ChatStyle.duration(TrackableText.remaining(trackable)));
         return ChatStyle.wording(
             "clienttimers.message.progress",
             kind(trackable.kind),
@@ -78,8 +78,8 @@ public final class TimerMessages {
 
     public static Component listLine(Trackable trackable) {
         Component value = trackable.kind == TrackableKind.STOPWATCH
-            ? ChatStyle.duration(OverlayText.elapsed(trackable))
-            : ChatStyle.wording("clienttimers.message.remaining", ChatStyle.duration(OverlayText.remaining(trackable)));
+            ? ChatStyle.duration(TrackableText.elapsed(trackable))
+            : ChatStyle.wording("clienttimers.message.remaining", ChatStyle.duration(TrackableText.remaining(trackable)));
         return ChatStyle.wording(
             "clienttimers.list.line",
             ChatStyle.name(trackable.name),
@@ -107,14 +107,6 @@ public final class TimerMessages {
         );
     }
 
-    public static Component overlayVisibility(Trackable trackable) {
-        return ChatStyle.wording(
-            trackable.overlayVisible ? "clienttimers.message.shown" : "clienttimers.message.hidden",
-            kind(trackable.kind),
-            ChatStyle.name(trackable.name)
-        );
-    }
-
     public static Component snoozed(String duration) {
         return ChatStyle.wording("clienttimers.message.snoozed", ChatStyle.duration(duration));
     }
@@ -137,7 +129,7 @@ public final class TimerMessages {
             "clienttimers.message.timerStarted",
             kind(trackable.kind),
             ChatStyle.name(trackable.name),
-            ChatStyle.duration(OverlayText.duration(trackable))
+            ChatStyle.duration(TrackableText.duration(trackable))
         );
         return withExtras(message, trackable);
     }
@@ -152,7 +144,7 @@ public final class TimerMessages {
             message.append(ChatStyle.wording("clienttimers.message.inThisWorld"));
         }
         if (trackable.kind == TrackableKind.TIMER && trackable.hasRepeat && trackable.remainingRepeats != 0) {
-            message.append(ChatStyle.wording("clienttimers.message.repeat", ChatStyle.duration(OverlayText.repeatDuration(trackable))));
+            message.append(ChatStyle.wording("clienttimers.message.repeat", ChatStyle.duration(TrackableText.repeatDuration(trackable))));
             if (trackable.remainingRepeats >= 0) {
                 message.append(ChatStyle.wording("clienttimers.message.repeatTimes", ChatStyle.count(trackable.remainingRepeats)));
             }
