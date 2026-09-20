@@ -1,5 +1,6 @@
 package me.wolfii.clienttimers.chat;
 
+import me.wolfii.clienttimers.timer.AlarmEngine;
 import me.wolfii.clienttimers.timer.TrackableText;
 import me.wolfii.clienttimers.time.ClockMode;
 import me.wolfii.clienttimers.timer.StoppedNotice;
@@ -17,13 +18,19 @@ public final class TimerMessages {
         return switch (trackable.kind) {
             case ALARM -> ChatStyle.wording(
                 "clienttimers.message.alarmStarted",
-                kind(trackable.kind),
-                ChatStyle.name(trackable.name),
+                subject(trackable),
                 ChatStyle.count(TrackableText.target(trackable))
             );
-            case TIMER -> timerStarted(trackable);
+            case TIMER -> withExtras(
+                ChatStyle.wording(
+                    "clienttimers.message.timerStarted",
+                    subject(trackable),
+                    ChatStyle.duration(TrackableText.duration(trackable))
+                ),
+                trackable
+            );
             case STOPWATCH -> withExtras(
-                ChatStyle.wording("clienttimers.message.started", kind(trackable.kind), ChatStyle.name(trackable.name)),
+                ChatStyle.wording("clienttimers.message.started", subject(trackable)),
                 trackable
             );
         };
@@ -33,20 +40,17 @@ public final class TimerMessages {
         MutableComponent message = switch (trackable.kind) {
             case ALARM -> ChatStyle.wording(
                 "clienttimers.message.alarmEnded",
-                kind(trackable.kind),
-                ChatStyle.name(trackable.name),
+                subject(trackable),
                 ChatStyle.count(TrackableText.target(trackable))
             );
             case TIMER -> ChatStyle.wording(
                 "clienttimers.message.timerEnded",
-                kind(trackable.kind),
-                ChatStyle.name(trackable.name),
+                subject(trackable),
                 ChatStyle.duration(TrackableText.elapsed(trackable))
             );
             case STOPWATCH -> ChatStyle.wording(
                 "clienttimers.message.stopwatchStopped",
-                kind(trackable.kind),
-                ChatStyle.name(trackable.name),
+                subject(trackable),
                 ChatStyle.duration(TrackableText.elapsed(trackable))
             );
         };
@@ -56,16 +60,15 @@ public final class TimerMessages {
         return message;
     }
 
+    public static Component endedCompact(Trackable trackable) {
+        return ChatStyle.wording("clienttimers.message.endedCompact", subject(trackable));
+    }
+
     public static Component progress(Trackable trackable) {
         Component value = trackable.kind == TrackableKind.STOPWATCH
             ? ChatStyle.duration(TrackableText.elapsed(trackable))
             : ChatStyle.wording("clienttimers.message.remaining", ChatStyle.duration(TrackableText.remaining(trackable)));
-        return ChatStyle.wording(
-            "clienttimers.message.progress",
-            kind(trackable.kind),
-            ChatStyle.name(trackable.name),
-            value
-        );
+        return ChatStyle.wording("clienttimers.message.progress", subject(trackable), value);
     }
 
     public static Component listHeader(TrackableKind kind) {
@@ -80,15 +83,14 @@ public final class TimerMessages {
         Component value = trackable.kind == TrackableKind.STOPWATCH
             ? ChatStyle.duration(TrackableText.elapsed(trackable))
             : ChatStyle.wording("clienttimers.message.remaining", ChatStyle.duration(TrackableText.remaining(trackable)));
-        return ChatStyle.wording(
-            "clienttimers.list.line",
-            ChatStyle.name(trackable.name),
-            value
-        );
+        if (isDefault(trackable.name)) {
+            return ChatStyle.wording("clienttimers.list.line", value);
+        }
+        return ChatStyle.wording("clienttimers.list.line.named", ChatStyle.name(trackable.name), value);
     }
 
     public static Component stopped(Trackable trackable) {
-        return ChatStyle.wording("clienttimers.message.stopped", kind(trackable.kind), ChatStyle.name(trackable.name));
+        return ChatStyle.wording("clienttimers.message.stopped", subject(trackable));
     }
 
     public static Component stoppedAll(int count) {
@@ -96,14 +98,13 @@ public final class TimerMessages {
     }
 
     public static Component stoppedOnLeave(StoppedNotice notice) {
-        return ChatStyle.wording("clienttimers.message.stoppedOnLeave", kind(notice.kind), ChatStyle.name(notice.name));
+        return ChatStyle.wording("clienttimers.message.stoppedOnLeave", subject(notice.kind, notice.name));
     }
 
     public static Component silent(Trackable trackable) {
         return ChatStyle.wording(
             trackable.silent ? "clienttimers.message.silentOn" : "clienttimers.message.silentOff",
-            kind(trackable.kind),
-            ChatStyle.name(trackable.name)
+            subject(trackable)
         );
     }
 
@@ -124,14 +125,19 @@ public final class TimerMessages {
         return result;
     }
 
-    private static Component timerStarted(Trackable trackable) {
-        MutableComponent message = ChatStyle.wording(
-            "clienttimers.message.timerStarted",
-            kind(trackable.kind),
-            ChatStyle.name(trackable.name),
-            ChatStyle.duration(TrackableText.duration(trackable))
-        );
-        return withExtras(message, trackable);
+    private static Component subject(Trackable trackable) {
+        return subject(trackable.kind, trackable.name);
+    }
+
+    private static Component subject(TrackableKind kind, String name) {
+        if (isDefault(name)) {
+            return kind(kind);
+        }
+        return ChatStyle.wording("clienttimers.message.named", kind(kind), ChatStyle.name(name));
+    }
+
+    private static boolean isDefault(String name) {
+        return name == null || name.isBlank() || AlarmEngine.DEFAULT_NAME.equalsIgnoreCase(name);
     }
 
     private static MutableComponent withExtras(MutableComponent message, Trackable trackable) {

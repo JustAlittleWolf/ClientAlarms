@@ -64,21 +64,7 @@ public class Config {
         return ConfigScreenFactory.create(parent);
     }
 
-    public static List<SoundPreset> defaultPresets() {
-        List<SoundPreset> defaults = new ArrayList<>();
-        defaults.add(new SoundPreset("Beep", 40, List.of(
-            new AlarmNote("minecraft:block.note_block.pling", 1.0f, 1.0f, 0),
-            new AlarmNote("minecraft:block.note_block.pling", 1.0f, 1.0f, 4),
-            new AlarmNote("minecraft:block.note_block.pling", 1.0f, 1.0f, 8)
-        )));
-        defaults.add(new SoundPreset("Bell", 30, List.of(
-            new AlarmNote("minecraft:block.note_block.bell", 1.0f, 1.0f, 0)
-        )));
-        return defaults;
-    }
-
     public void save() {
-        syncLegacyFields();
         HANDLER.save();
     }
 
@@ -89,66 +75,35 @@ public class Config {
         if (presets == null) {
             presets = new ArrayList<>();
         }
-        if (presets.isEmpty()) {
-            presets.addAll(defaultPresets());
+        PresetStore.initialize(this);
+        List<String> names = PresetStore.names();
+        if (selectedPreset == null || PresetStore.get(selectedPreset) == null) {
+            selectedPreset = names.isEmpty() ? "Beep" : names.getFirst();
         }
-        for (SoundPreset preset : presets) {
-            if (preset.notes == null) {
-                preset.notes = new ArrayList<>();
-            } else {
-                preset.setNotes(preset.notes);
-            }
-        }
-        if (!notes.isEmpty()) {
-            selected().setNotes(notes);
-            selected().silenceTicks = silenceTicksBetweenRepeats;
-        }
-        selectPreset(selectedPreset);
-        syncLegacyFields();
     }
 
     public SoundPreset selected() {
-        SoundPreset found = findPreset(selectedPreset);
+        SoundPreset found = PresetStore.get(selectedPreset);
         if (found != null) {
             return found;
         }
-        if (presets.isEmpty()) {
-            presets.addAll(defaultPresets());
-        }
-        selectedPreset = presets.getFirst().name;
-        return presets.getFirst();
-    }
-
-    public SoundPreset findPreset(String name) {
-        if (name == null || name.isBlank()) {
-            return null;
-        }
-        for (SoundPreset preset : presets) {
-            if (preset.name != null && preset.name.equalsIgnoreCase(name)) {
-                return preset;
+        List<String> names = PresetStore.names();
+        if (!names.isEmpty()) {
+            selectedPreset = names.getFirst();
+            found = PresetStore.get(selectedPreset);
+            if (found != null) {
+                return found;
             }
         }
-        return null;
+        return new SoundPreset("Beep", 40, List.of(
+            new AlarmNote("minecraft:block.note_block.pling", 1.0f, 1.0f, 0)
+        ));
     }
 
     public void selectPreset(String name) {
-        SoundPreset found = findPreset(name);
-        if (found != null) {
-            selectedPreset = found.name;
-            syncLegacyFields();
+        if (PresetStore.get(name) != null) {
+            selectedPreset = name;
         }
-    }
-
-    public void saveCurrentAsPreset(String name) {
-        if (name == null || name.isBlank()) {
-            return;
-        }
-        SoundPreset created = selected().copy();
-        created.name = name.trim();
-        presets.removeIf(existing -> existing.name != null && existing.name.equalsIgnoreCase(created.name));
-        presets.add(created);
-        selectedPreset = created.name;
-        syncLegacyFields();
     }
 
     public int cycleLengthTicks() {
@@ -166,14 +121,5 @@ public class Config {
             return Math.max(1, preset.silenceTicks);
         }
         return last + Math.max(0, preset.silenceTicks);
-    }
-
-    private void syncLegacyFields() {
-        SoundPreset preset = selected();
-        silenceTicksBetweenRepeats = preset.silenceTicks;
-        notes = new ArrayList<>();
-        for (AlarmNote note : preset.notes) {
-            notes.add(note.copy());
-        }
     }
 }
