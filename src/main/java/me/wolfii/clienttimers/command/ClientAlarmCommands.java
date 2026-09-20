@@ -24,12 +24,12 @@ import net.minecraft.network.chat.Component;
 import java.util.List;
 
 public final class ClientAlarmCommands {
-    private static final SimpleCommandExceptionType UNKNOWN = new SimpleCommandExceptionType(Component.translatable("clientalarms.error.notFound"));
-    private static final SimpleCommandExceptionType RESERVED = new SimpleCommandExceptionType(Component.translatable("clientalarms.error.reservedName"));
-    private static final SimpleCommandExceptionType BAD_SCOPE = new SimpleCommandExceptionType(Component.translatable("clientalarms.error.worldScope"));
-    private static final SimpleCommandExceptionType NOTHING_RINGING = new SimpleCommandExceptionType(Component.translatable("clientalarms.error.nothingRinging"));
-    private static final SimpleCommandExceptionType ALARM_PAST = new SimpleCommandExceptionType(Component.translatable("clientalarms.error.alarmInPast"));
-    private static final SimpleCommandExceptionType NOT_IN_WORLD = new SimpleCommandExceptionType(Component.translatable("clientalarms.error.notInWorld"));
+    private static final SimpleCommandExceptionType UNKNOWN = new SimpleCommandExceptionType(Component.translatable("clienttimers.error.notFound"));
+    private static final SimpleCommandExceptionType RESERVED = new SimpleCommandExceptionType(Component.translatable("clienttimers.error.reservedName"));
+    private static final SimpleCommandExceptionType BAD_SCOPE = new SimpleCommandExceptionType(Component.translatable("clienttimers.error.worldScope"));
+    private static final SimpleCommandExceptionType NOTHING_RINGING = new SimpleCommandExceptionType(Component.translatable("clienttimers.error.nothingRinging"));
+    private static final SimpleCommandExceptionType ALARM_PAST = new SimpleCommandExceptionType(Component.translatable("clienttimers.error.alarmInPast"));
+    private static final SimpleCommandExceptionType NOT_IN_WORLD = new SimpleCommandExceptionType(Component.translatable("clienttimers.error.notInWorld"));
 
     private ClientAlarmCommands() {
     }
@@ -206,12 +206,12 @@ public final class ClientAlarmCommands {
     private static int createAlarm(CommandContext<FabricClientCommandSource> context, String name) throws CommandSyntaxException {
         requireName(name);
         try {
-            AlarmTarget target = DateTimeParser.parse(StringArgumentType.getString(context, "when"), Config.get().dateOrder, DateTimeParser.now());
+            AlarmTarget target = DateTimeParser.parse(StringArgumentType.getString(context, "when"), Config.getConfig().dateOrder, DateTimeParser.now());
             requireFuture(target);
             AlarmEngine.startAlarm(name, target, false);
             return 1;
         } catch (IllegalArgumentException exception) {
-            throw new SimpleCommandExceptionType(Component.translatable("clientalarms.error.invalidTime", exception.getMessage())).create();
+            throw new SimpleCommandExceptionType(Component.translatable("clienttimers.error.invalidTime", exception.getMessage())).create();
         }
     }
 
@@ -233,7 +233,7 @@ public final class ClientAlarmCommands {
             AlarmEngine.startTimer(name, duration, mode, scope, repeatAfter, repeatCount);
             return 1;
         } catch (IllegalArgumentException exception) {
-            throw new SimpleCommandExceptionType(Component.translatable("clientalarms.error.invalidDuration", exception.getMessage())).create();
+            throw new SimpleCommandExceptionType(Component.translatable("clienttimers.error.invalidDuration", exception.getMessage())).create();
         }
     }
 
@@ -258,7 +258,7 @@ public final class ClientAlarmCommands {
         try {
             return ClockMode.fromCommand(StringArgumentType.getString(context, "mode"));
         } catch (IllegalArgumentException exception) {
-            throw new SimpleCommandExceptionType(Component.translatable("clientalarms.error.invalidMode")).create();
+            throw new SimpleCommandExceptionType(Component.translatable("clienttimers.error.invalidMode")).create();
         }
     }
 
@@ -266,7 +266,7 @@ public final class ClientAlarmCommands {
         try {
             return DurationParser.parse(StringArgumentType.getString(context, name));
         } catch (IllegalArgumentException exception) {
-            throw new SimpleCommandExceptionType(Component.translatable("clientalarms.error.invalidDuration", exception.getMessage())).create();
+            throw new SimpleCommandExceptionType(Component.translatable("clienttimers.error.invalidDuration", exception.getMessage())).create();
         }
     }
 

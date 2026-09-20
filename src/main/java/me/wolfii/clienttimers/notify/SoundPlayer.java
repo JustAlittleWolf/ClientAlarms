@@ -1,7 +1,7 @@
 package me.wolfii.clienttimers.notify;
 
 import dev.isxander.yacl3.gui.YACLScreen;
-import me.wolfii.clienttimers.ClientAlarms;
+import me.wolfii.clienttimers.client.ClientTimersClient;
 import me.wolfii.clienttimers.config.AlarmNote;
 import me.wolfii.clienttimers.config.Config;
 import me.wolfii.clienttimers.config.SoundVolumeMode;
@@ -49,11 +49,11 @@ public final class SoundPlayer {
                 tickCycle(minecraft, trackable.soundCycleTick, false);
             }
             trackable.soundCycleTick++;
-            int length = Math.max(1, Config.get().cycleLengthTicks());
+            int length = Math.max(1, Config.getConfig().cycleLengthTicks());
             if (trackable.soundCycleTick >= length) {
                 trackable.soundCycleTick = 0;
                 trackable.ringsCompleted++;
-                int maxRings = Config.get().autoStopAfterRings;
+                int maxRings = Config.getConfig().autoStopAfterRings;
                 if (maxRings > 0 && trackable.ringsCompleted >= maxRings) {
                     trackable.ringing = false;
                     if (!trackable.running) {
@@ -72,9 +72,6 @@ public final class SoundPlayer {
     public static void stopPreview(Minecraft minecraft) {
         previewing = false;
         previewTick = 0;
-        if (minecraft.getSoundManager() == null) {
-            return;
-        }
         Iterator<SoundInstance> iterator = PREVIEW.iterator();
         while (iterator.hasNext()) {
             minecraft.getSoundManager().stop(iterator.next());
@@ -87,17 +84,17 @@ public final class SoundPlayer {
     }
 
     private static boolean shouldPlay(Trackable trackable) {
-        if (!trackable.ringing || trackable.silent || !Config.get().playSounds) {
+        if (!trackable.ringing || trackable.silent || !Config.getConfig().playSounds) {
             return false;
         }
         return trackable.snoozeUntilEpoch <= System.currentTimeMillis();
     }
 
     private static void tickCycle(Minecraft minecraft, int cycleTick, boolean preview) {
-        if ((!preview && !Config.get().playSounds) || minecraft.getSoundManager() == null) {
+        if (!preview && !Config.getConfig().playSounds) {
             return;
         }
-        for (AlarmNote note : Config.get().notes) {
+        for (AlarmNote note : Config.getConfig().notes) {
             if (!note.isPlayable()) {
                 continue;
             }
@@ -110,11 +107,11 @@ public final class SoundPlayer {
     private static void play(Minecraft minecraft, AlarmNote note, boolean preview) {
         Optional<SoundEvent> event = resolveKnown(note.soundId);
         if (event.isEmpty()) {
-            ClientAlarms.LOGGER.debug("Unknown alarm sound {}", note.soundId);
+            ClientTimersClient.LOGGER.debug("Unknown alarm sound {}", note.soundId);
             return;
         }
-        float volume = Math.max(0.0f, note.volume) * Config.get().masterVolume;
-        SoundInstance instance = Config.get().soundVolumeMode == SoundVolumeMode.ALARM
+        float volume = Math.max(0.0f, note.volume) * Config.getConfig().masterVolume;
+        SoundInstance instance = Config.getConfig().soundVolumeMode == SoundVolumeMode.ALARM
             ? new AlarmSoundInstance(event.get(), note.pitch, volume)
             : SimpleSoundInstance.forUI(event.get(), note.pitch, volume);
         minecraft.getSoundManager().play(instance);
@@ -161,7 +158,7 @@ public final class SoundPlayer {
             return false;
         }
         String title = tab.getTabTitle().getString();
-        String sound = Component.translatable("clientalarms.config.sound").getString();
+        String sound = Component.translatable("clienttimers.config.sound").getString();
         return title.contains(sound);
     }
 }

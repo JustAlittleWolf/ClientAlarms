@@ -2,7 +2,7 @@ package me.wolfii.clienttimers.persist;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import me.wolfii.clienttimers.ClientAlarms;
+import me.wolfii.clienttimers.client.ClientTimersClient;
 import me.wolfii.clienttimers.engine.AlarmEngine;
 import me.wolfii.clienttimers.engine.Trackable;
 import net.fabricmc.loader.api.FabricLoader;
@@ -76,7 +76,7 @@ public final class StateStore {
             Snapshot snapshot = GSON.fromJson(json, Snapshot.class);
             return snapshot == null ? new Snapshot() : snapshot;
         } catch (Exception exception) {
-            ClientAlarms.LOGGER.warn("Failed to read client alarm state", exception);
+            ClientTimersClient.LOGGER.warn("Failed to read client alarm state", exception);
             return new Snapshot();
         }
     }
@@ -97,7 +97,7 @@ public final class StateStore {
                     Files.createDirectories(PATH.getParent());
                     Files.writeString(PATH, GSON.toJson(snapshot), StandardCharsets.UTF_8);
                 } catch (IOException nested) {
-                    ClientAlarms.LOGGER.warn("Failed to write client alarm state", nested);
+                    ClientTimersClient.LOGGER.warn("Failed to write client alarm state", nested);
                 }
             }
         }

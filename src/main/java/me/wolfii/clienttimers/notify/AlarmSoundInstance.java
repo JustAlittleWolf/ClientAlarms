@@ -26,6 +26,6 @@ public class AlarmSoundInstance extends SimpleSoundInstance {
     }
 
     public static boolean ignoresGameVolume(SoundInstance instance) {
-        return instance instanceof AlarmSoundInstance && Config.get().soundVolumeMode == SoundVolumeMode.ALARM;
+        return instance instanceof AlarmSoundInstance && Config.getConfig().soundVolumeMode == SoundVolumeMode.ALARM;
     }
 }

@@ -1,8 +1,6 @@
 package me.wolfii.clienttimers.time;
 
 public record ParsedDuration(long extraTicks, long extraMillis, String raw) {
-    public static final ParsedDuration ZERO = new ParsedDuration(0, 0, "0s");
-
     public long ticksFor(ClockMode mode) {
         if (mode == ClockMode.TICKS_PLAYING) {
             return extraTicks + extraMillis / 50L;

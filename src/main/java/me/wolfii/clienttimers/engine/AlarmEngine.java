@@ -68,8 +68,8 @@ public final class AlarmEngine {
     public static synchronized Trackable startAlarm(String name, AlarmTarget target, boolean silentOverride) {
         String resolved = resolveName(name);
         Trackable trackable = upsert(TrackableKind.ALARM, resolved);
-        trackable.silent = silentOverride || Config.get().silentByDefault;
-        trackable.overlayVisible = Config.get().overlayByDefault;
+        trackable.silent = silentOverride || Config.getConfig().silentByDefault;
+        trackable.overlayVisible = Config.getConfig().overlayByDefault;
         trackable.running = true;
         trackable.completed = false;
         trackable.missed = false;
@@ -154,7 +154,7 @@ public final class AlarmEngine {
             if (kind == TrackableKind.STOPWATCH) {
                 Notifier.info(MessageFormats.formatEnded(trackable));
             } else {
-                Notifier.info(Component.translatable("clientalarms.message.stopped", trackable.name));
+                Notifier.info(Component.translatable("clienttimers.message.stopped", trackable.name));
             }
         }
         return true;
@@ -208,7 +208,7 @@ public final class AlarmEngine {
         }
         if (count > 0) {
             markDirty();
-            Notifier.info(Component.translatable("clientalarms.message.snoozed", DurationParser.format(duration, ClockMode.REAL_TIME)));
+            Notifier.info(Component.translatable("clienttimers.message.snoozed", DurationParser.format(duration, ClockMode.REAL_TIME)));
         }
         return count;
     }
@@ -233,7 +233,7 @@ public final class AlarmEngine {
             }
         }
         if (count > 0) {
-            Notifier.info(Component.translatable("clientalarms.message.stoppedAll", count));
+            Notifier.info(Component.translatable("clienttimers.message.stoppedAll", count));
         }
         return count;
     }
@@ -241,7 +241,6 @@ public final class AlarmEngine {
     public static synchronized void tick(Minecraft minecraft) {
         long now = System.currentTimeMillis();
         boolean inWorld = WorldKeys.inWorld(minecraft);
-        boolean gameRunning = WorldKeys.gameRunning(minecraft);
         String worldKey = WorldKeys.currentWorldKey(minecraft);
         if (!worldKey.equals(lastWorldKey)) {
             lastPlayingAnchor = inWorld ? now : null;
@@ -258,15 +257,11 @@ public final class AlarmEngine {
             lastPlayingAnchor = null;
         }
         long gameDelta = 0;
-        if (gameRunning) {
-            if (lastGameAnchor == null) {
-                lastGameAnchor = now;
-            }
-            gameDelta = now - lastGameAnchor;
+        if (lastGameAnchor == null) {
             lastGameAnchor = now;
-        } else {
-            lastGameAnchor = null;
         }
+        gameDelta = now - lastGameAnchor;
+        lastGameAnchor = now;
         long worldTime = WorldKeys.currentWorldTime(minecraft);
         long worldDay = WorldKeys.currentWorldDay(minecraft);
 
@@ -318,7 +313,7 @@ public final class AlarmEngine {
             }
         }
         for (Trackable ended : justEnded) {
-            Notifier.ended(ended, ended.silent || !Config.get().playSounds);
+            Notifier.ended(ended, ended.silent || !Config.getConfig().playSounds);
         }
         SoundPlayer.tick(minecraft, ringingEntries());
         pruneInactive();
@@ -492,8 +487,8 @@ public final class AlarmEngine {
         trackable.clockMode = mode;
         trackable.worldScope = mode.supportsWorldScope() ? scope : WorldScope.ANY_WORLD;
         trackable.worldKey = WorldKeys.currentWorldKey(Minecraft.getInstance());
-        trackable.silent = Config.get().silentByDefault;
-        trackable.overlayVisible = Config.get().overlayByDefault;
+        trackable.silent = Config.getConfig().silentByDefault;
+        trackable.overlayVisible = Config.getConfig().overlayByDefault;
         trackable.running = true;
         trackable.completed = false;
         trackable.missed = false;
@@ -509,7 +504,7 @@ public final class AlarmEngine {
             case AlarmTarget.WallTime wallTime -> {
                 trackable.alarmType = "WALL";
                 trackable.targetEpochMillis = wallTime.when().toInstant().toEpochMilli();
-                trackable.targetDisplay = DateTimeParser.formatWall(wallTime.when(), Config.get().dateOrder);
+                trackable.targetDisplay = DateTimeParser.formatWall(wallTime.when(), Config.getConfig().dateOrder);
                 trackable.durationMillis = Math.max(0, trackable.targetEpochMillis - System.currentTimeMillis());
                 trackable.clockMode = ClockMode.REAL_TIME;
             }
@@ -522,7 +517,7 @@ public final class AlarmEngine {
             case AlarmTarget.GameDay gameDay -> {
                 trackable.alarmType = "GAME_DAY";
                 trackable.targetDay = gameDay.day();
-                trackable.targetDisplay = Component.translatable("clientalarms.value.day", gameDay.day()).getString();
+                trackable.targetDisplay = Component.translatable("clienttimers.value.day", gameDay.day()).getString();
                 trackable.clockMode = ClockMode.TICKS_PLAYING;
             }
         }

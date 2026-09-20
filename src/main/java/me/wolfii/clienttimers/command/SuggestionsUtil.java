@@ -5,11 +5,9 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import me.wolfii.clienttimers.engine.AlarmEngine;
 import me.wolfii.clienttimers.engine.TrackableKind;
 import me.wolfii.clienttimers.time.ClockMode;
-import me.wolfii.clienttimers.time.WorldScope;
 import net.minecraft.commands.SharedSuggestionProvider;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 public final class SuggestionsUtil {
@@ -44,20 +42,5 @@ public final class SuggestionsUtil {
             ClockMode.REAL_TIME.commandName()
         );
         return SharedSuggestionProvider.suggest(names, builder);
-    }
-
-    public static CompletableFuture<Suggestions> worldScopes(SuggestionsBuilder builder) {
-        return SharedSuggestionProvider.suggest(List.of(
-            WorldScope.THIS_WORLD.commandName(),
-            WorldScope.ANY_WORLD.commandName()
-        ), builder);
-    }
-
-    public static CompletableFuture<Suggestions> actions(Iterable<String> actions, SuggestionsBuilder builder) {
-        return SharedSuggestionProvider.suggest(actions, builder);
-    }
-
-    public static boolean matches(String remaining, String value) {
-        return value.toLowerCase(Locale.ROOT).startsWith(remaining.toLowerCase(Locale.ROOT));
     }
 }

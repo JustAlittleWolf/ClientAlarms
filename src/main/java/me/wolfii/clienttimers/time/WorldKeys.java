@@ -12,14 +12,11 @@ public final class WorldKeys {
     public static String currentWorldKey(Minecraft minecraft) {
         IntegratedServer integrated = minecraft.getSingleplayerServer();
         if (integrated != null) {
-            if (integrated.overworld() != null) {
-                return "sp:" + Long.toUnsignedString(integrated.overworld().getSeed());
-            }
-            return "sp:" + Long.toUnsignedString(integrated.getWorldGenSettings().options().seed());
+            return "sp:" + Long.toUnsignedString(integrated.overworld().getSeed());
         }
         ServerData server = minecraft.getCurrentServer();
         if (server != null) {
-            String address = server.ip == null || server.ip.isBlank() ? server.name : server.ip;
+            String address = server.ip.isBlank() ? server.name : server.ip;
             return "mp:" + address;
         }
         return "";
@@ -27,22 +24,6 @@ public final class WorldKeys {
 
     public static boolean inWorld(Minecraft minecraft) {
         return minecraft.level != null && minecraft.player != null && minecraft.getConnection() != null;
-    }
-
-    public static boolean gameRunning(Minecraft minecraft) {
-        if (minecraft.getOverlay() != null) {
-            return false;
-        }
-        Screen screen = minecraft.screen;
-        if (screen instanceof LevelLoadingScreen
-            || screen instanceof ProgressScreen
-            || screen instanceof ConnectScreen
-            || screen instanceof GenericMessageScreen
-            || screen instanceof GenericWaitingScreen
-            || screen instanceof DisconnectedScreen) {
-            return false;
-        }
-        return true;
     }
 
     public static long currentWorldTime(Minecraft minecraft) {

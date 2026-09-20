@@ -21,7 +21,7 @@ public class SoundEngineMixin {
             target = "Lnet/minecraft/client/sounds/SoundEngine;calculateVolume(FLnet/minecraft/sounds/SoundSource;)F"
         )
     )
-    private float clientalarms$playWithAlarmVolume(
+    private float clienttimers$playWithAlarmVolume(
         SoundEngine instance,
         float volume,
         SoundSource source,
@@ -35,7 +35,7 @@ public class SoundEngineMixin {
     }
 
     @Inject(method = "calculateVolume(Lnet/minecraft/client/resources/sounds/SoundInstance;)F", at = @At("HEAD"), cancellable = true)
-    private void clientalarms$keepAlarmVolume(SoundInstance instance, CallbackInfoReturnable<Float> cir) {
+    private void clienttimers$keepAlarmVolume(SoundInstance instance, CallbackInfoReturnable<Float> cir) {
         if (AlarmSoundInstance.ignoresGameVolume(instance)) {
             cir.setReturnValue(Mth.clamp(instance.getVolume(), 0.0F, 2.0F));
         }

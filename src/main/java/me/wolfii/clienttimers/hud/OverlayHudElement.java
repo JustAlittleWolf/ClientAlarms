@@ -55,7 +55,7 @@ public class OverlayHudElement implements HudElement {
         int height = minecraft.getWindow().getGuiScaledHeight();
         Map<TrackableKind, List<Trackable>> grouped = AlarmEngine.visibleOverlay();
         for (TrackableKind kind : TrackableKind.values()) {
-            OverlaySettings settings = Config.get().overlayFor(kind);
+            OverlaySettings settings = Config.getConfig().overlayFor(kind);
             if (!settings.enabled) {
                 continue;
             }

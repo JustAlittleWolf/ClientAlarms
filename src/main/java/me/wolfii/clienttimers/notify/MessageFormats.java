@@ -20,24 +20,24 @@ public final class MessageFormats {
 
     public static Component formatEnded(Trackable trackable) {
         String pattern = switch (trackable.kind) {
-            case ALARM -> firstNonBlank(Config.get().alarmEndedFormat, Component.translatable("clientalarms.format.alarmEnded").getString());
-            case TIMER -> firstNonBlank(Config.get().timerEndedFormat, Component.translatable("clientalarms.format.timerEnded").getString());
-            case STOPWATCH -> firstNonBlank(Config.get().stopwatchStoppedFormat, Component.translatable("clientalarms.format.stopwatchStopped").getString());
+            case ALARM -> firstNonBlank(Config.getConfig().alarmEndedFormat, Component.translatable("clienttimers.format.alarmEnded").getString());
+            case TIMER -> firstNonBlank(Config.getConfig().timerEndedFormat, Component.translatable("clienttimers.format.timerEnded").getString());
+            case STOPWATCH -> firstNonBlank(Config.getConfig().stopwatchStoppedFormat, Component.translatable("clienttimers.format.stopwatchStopped").getString());
         };
         return Component.literal(apply(pattern, placeholders(trackable)));
     }
 
     public static Component formatStarted(Trackable trackable) {
         String pattern = switch (trackable.kind) {
-            case ALARM -> firstNonBlank(Config.get().alarmStartedFormat, Component.translatable("clientalarms.format.alarmStarted").getString());
-            case TIMER -> firstNonBlank(Config.get().timerStartedFormat, Component.translatable("clientalarms.format.timerStarted").getString());
-            case STOPWATCH -> firstNonBlank(Config.get().stopwatchStartedFormat, Component.translatable("clientalarms.format.stopwatchStarted").getString());
+            case ALARM -> firstNonBlank(Config.getConfig().alarmStartedFormat, Component.translatable("clienttimers.format.alarmStarted").getString());
+            case TIMER -> firstNonBlank(Config.getConfig().timerStartedFormat, Component.translatable("clienttimers.format.timerStarted").getString());
+            case STOPWATCH -> firstNonBlank(Config.getConfig().stopwatchStartedFormat, Component.translatable("clienttimers.format.stopwatchStarted").getString());
         };
         return Component.literal(apply(pattern, placeholders(trackable)));
     }
 
     public static String overlayLine(Trackable trackable) {
-        var overlay = Config.get().overlayFor(trackable.kind);
+        var overlay = Config.getConfig().overlayFor(trackable.kind);
         String name = apply(firstNonBlank(overlay.nameFormat, "%name%"), placeholders(trackable));
         Map<String, String> values = placeholders(trackable);
         values.put("name", name);
@@ -46,7 +46,7 @@ public final class MessageFormats {
     }
 
     public static String heading(TrackableKind kind) {
-        var overlay = Config.get().overlayFor(kind);
+        var overlay = Config.getConfig().overlayFor(kind);
         return firstNonBlank(overlay.heading, Component.translatable("clienttimers.heading." + kind.name().toLowerCase()).getString());
     }
 

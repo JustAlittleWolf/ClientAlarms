@@ -19,13 +19,13 @@ public final class ScreenAlarmButtons {
             if (screen instanceof ChatScreen) {
                 return;
             }
-            Button stop = Button.builder(Component.translatable("clientalarms.button.stop"), button -> AlarmEngine.stopAllRinging())
+            Button stop = Button.builder(Component.translatable("clienttimers.button.stop"), button -> AlarmEngine.stopAllRinging())
                 .bounds(4, 4, 72, 20)
-                .tooltip(Tooltip.create(Component.translatable("clientalarms.button.stopAll.hover")))
+                .tooltip(Tooltip.create(Component.translatable("clienttimers.button.stopAll.hover")))
                 .build();
-            Button snooze = Button.builder(Component.translatable("clientalarms.button.snooze"), button -> AlarmEngine.snoozeAll(DurationParser.parse("5min")))
+            Button snooze = Button.builder(Component.translatable("clienttimers.button.snooze"), button -> AlarmEngine.snoozeAll(DurationParser.parse("5min")))
                 .bounds(80, 4, 100, 20)
-                .tooltip(Tooltip.create(Component.translatable("clientalarms.button.snooze.hover")))
+                .tooltip(Tooltip.create(Component.translatable("clienttimers.button.snooze.hover")))
                 .build();
             stop.visible = false;
             snooze.visible = false;
@@ -37,7 +37,7 @@ public final class ScreenAlarmButtons {
     }
 
     private static void update(Button stop, Button snooze) {
-        boolean show = Config.get().screenActionButtons && AlarmEngine.hasRinging();
+        boolean show = Config.getConfig().screenActionButtons && AlarmEngine.hasRinging();
         stop.visible = show;
         snooze.visible = show;
         stop.active = show;

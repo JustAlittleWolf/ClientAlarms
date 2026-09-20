@@ -1,25 +1,25 @@
 {
   "schemaVersion": 1,
-  "id": "clientalarms",
+  "id": "clienttimers",
   "version": "${version}",
-  "name": "Client Alarms",
+  "name": "Client Timers",
   "description": "Use timers, alarms and a stopwatch fully client side",
   "authors": [
     "JustAlittleWolf"
   ],
   "contact": {
-    "issues": "https://github.com/JustAlittleWolf/ClientAlarms/issues/",
-    "sources": "https://github.com/JustAlittleWolf/ClientAlarms/"
+    "issues": "https://github.com/JustAlittleWolf/ClientTimers/issues/",
+    "sources": "https://github.com/JustAlittleWolf/ClientTimers/"
   },
   "license": "MIT",
-  "icon": "assets/clientalarms/icon.png",
+  "icon": "assets/clienttimers/icon.png",
   "environment": "client",
   "entrypoints": {
     "client": [
-      "me.wolfii.clientalarms.client.ClientAlarmsClient"
+      "me.wolfii.clienttimers.client.ClientTimersClient"
     ],
     "modmenu": [
-      "me.wolfii.clientalarms.client.ModMenuIntegration"
+      "me.wolfii.clienttimers.client.ModMenuIntegration"
     ]
   },
   "mixins": [

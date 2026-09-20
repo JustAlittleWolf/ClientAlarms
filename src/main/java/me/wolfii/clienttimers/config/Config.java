@@ -21,7 +21,7 @@ public class Config {
 
     static {
         HANDLER.load();
-        get().ensureDefaults();
+        getConfig().ensureDefaults();
     }
 
     @SerialEntry
@@ -80,12 +80,8 @@ public class Config {
     @SerialEntry
     public String selectedPreset = "Pling";
 
-    public static Config get() {
+    public static Config getConfig() {
         return HANDLER.instance();
-    }
-
-    public static ConfigClassHandler<Config> handler() {
-        return HANDLER;
     }
 
     public static Screen createScreen(Screen parent) {
