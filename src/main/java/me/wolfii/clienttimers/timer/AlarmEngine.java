@@ -16,11 +16,9 @@ import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -180,17 +178,6 @@ public final class AlarmEngine {
         return true;
     }
 
-    public static synchronized boolean setOverlay(TrackableKind kind, String name, boolean visible) {
-        Optional<Trackable> found = find(kind, name);
-        if (found.isEmpty()) {
-            return false;
-        }
-        found.get().overlayVisible = visible;
-        markDirty();
-        Notifier.info(TimerMessages.overlayVisibility(found.get()));
-        return true;
-    }
-
     public static synchronized boolean progress(TrackableKind kind, String name) {
         Optional<Trackable> found = find(kind, name);
         if (found.isEmpty()) {
@@ -340,19 +327,6 @@ public final class AlarmEngine {
         }
         persistBlocking();
         StateStore.shutdown();
-    }
-
-    public static synchronized Map<TrackableKind, List<Trackable>> visibleOverlay() {
-        Map<TrackableKind, List<Trackable>> grouped = new EnumMap<>(TrackableKind.class);
-        for (TrackableKind kind : TrackableKind.values()) {
-            grouped.put(kind, new ArrayList<>());
-        }
-        for (Trackable entry : ENTRIES) {
-            if (entry.overlayVisible && (entry.running || entry.ringing)) {
-                grouped.get(entry.kind).add(entry);
-            }
-        }
-        return grouped;
     }
 
     public static synchronized List<String> names(TrackableKind kind) {
@@ -539,7 +513,6 @@ public final class AlarmEngine {
         trackable.worldScope = mode.supportsWorldScope() ? scope : WorldScope.ANY_WORLD;
         trackable.worldKey = WorldKeys.currentWorldKey(Minecraft.getInstance());
         trackable.silent = Config.getConfig().silentByDefault;
-        trackable.overlayVisible = Config.getConfig().overlayByDefault;
         trackable.running = true;
         trackable.completed = false;
         trackable.missed = false;

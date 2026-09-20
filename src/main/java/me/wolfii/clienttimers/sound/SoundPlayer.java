@@ -95,7 +95,7 @@ public final class SoundPlayer {
         if (!preview && !Config.getConfig().playSounds) {
             return;
         }
-        for (AlarmNote note : Config.getConfig().notes) {
+        for (AlarmNote note : Config.getConfig().selected().notes) {
             if (!note.isPlayable()) {
                 continue;
             }

@@ -143,8 +143,6 @@ public final class ClientAlarmCommands {
             attachNamed(command, action, kind, name -> switch (action) {
                 case "stop" -> AlarmEngine.stop(kind, name, true) ? 1 : fail();
                 case "progress" -> AlarmEngine.progress(kind, name) ? 1 : fail();
-                case "hide" -> AlarmEngine.setOverlay(kind, name, false) ? 1 : fail();
-                case "show" -> AlarmEngine.setOverlay(kind, name, true) ? 1 : fail();
                 case "silent" -> AlarmEngine.toggleSilent(kind, name) ? 1 : fail();
                 default -> fail();
             });

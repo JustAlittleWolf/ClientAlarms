@@ -2,15 +2,12 @@ package me.wolfii.clienttimers.client;
 
 import me.wolfii.clienttimers.command.ClientAlarmCommands;
 import me.wolfii.clienttimers.config.Config;
-import me.wolfii.clienttimers.hud.OverlayHudElement;
 import me.wolfii.clienttimers.persist.StateStore;
 import me.wolfii.clienttimers.sound.SoundPlayer;
 import me.wolfii.clienttimers.timer.AlarmEngine;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +19,6 @@ public class ClientTimersClient implements ClientModInitializer {
         Config.getConfig().ensureDefaults();
         StateStore.loadBlocking();
         ClientAlarmCommands.register();
-        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("clienttimers", "overlay"), new OverlayHudElement());
         ClientTickEvents.END_CLIENT_TICK.register(AlarmEngine::tick);
         Runtime.getRuntime().addShutdownHook(new Thread(AlarmEngine::persistOnShutdown, "clienttimers-shutdown"));
         ClientLifecycleEvents.CLIENT_STOPPING.register(minecraft -> {
