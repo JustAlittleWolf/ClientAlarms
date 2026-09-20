@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class StateStore {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -26,18 +28,21 @@ public final class StateStore {
         return thread;
     });
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("clientalarms-state.json");
+    private static final Object WRITE_LOCK = new Object();
+    private static final AtomicBoolean CLOSED = new AtomicBoolean();
 
     private StateStore() {
     }
 
-    public static void load() {
-        IO.execute(() -> {
-            Snapshot snapshot = readSnapshot();
-            net.minecraft.client.Minecraft.getInstance().execute(() -> AlarmEngine.replaceAll(snapshot.entries));
-        });
+    public static void loadBlocking() {
+        Snapshot snapshot = readSnapshot();
+        AlarmEngine.replaceAll(snapshot.entries);
     }
 
     public static void saveAsync(List<Trackable> entries) {
+        if (CLOSED.get()) {
+            return;
+        }
         Snapshot snapshot = new Snapshot();
         snapshot.entries = copy(entries);
         try {
@@ -53,7 +58,13 @@ public final class StateStore {
     }
 
     public static void shutdown() {
-        IO.shutdown();
+        CLOSED.set(true);
+        IO.shutdownNow();
+        try {
+            IO.awaitTermination(2, TimeUnit.SECONDS);
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static Snapshot readSnapshot() {
@@ -71,26 +82,31 @@ public final class StateStore {
     }
 
     private static void writeSnapshot(Snapshot snapshot) {
-        try {
-            Files.createDirectories(PATH.getParent());
-            Path temp = PATH.resolveSibling(PATH.getFileName() + ".tmp");
-            Files.writeString(temp, GSON.toJson(snapshot), StandardCharsets.UTF_8);
-            Files.move(temp, PATH, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-        } catch (IOException exception) {
+        synchronized (WRITE_LOCK) {
             try {
                 Files.createDirectories(PATH.getParent());
-                Files.writeString(PATH, GSON.toJson(snapshot), StandardCharsets.UTF_8);
-            } catch (IOException nested) {
-                ClientAlarms.LOGGER.warn("Failed to write client alarm state", nested);
+                Path temp = PATH.resolveSibling(PATH.getFileName() + ".tmp");
+                Files.writeString(temp, GSON.toJson(snapshot), StandardCharsets.UTF_8);
+                try {
+                    Files.move(temp, PATH, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                } catch (IOException atomicFailed) {
+                    Files.move(temp, PATH, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } catch (IOException exception) {
+                try {
+                    Files.createDirectories(PATH.getParent());
+                    Files.writeString(PATH, GSON.toJson(snapshot), StandardCharsets.UTF_8);
+                } catch (IOException nested) {
+                    ClientAlarms.LOGGER.warn("Failed to write client alarm state", nested);
+                }
             }
         }
     }
 
     private static List<Trackable> copy(List<Trackable> entries) {
         List<Trackable> copy = new ArrayList<>();
-        Gson gson = GSON;
         for (Trackable entry : entries) {
-            copy.add(gson.fromJson(gson.toJson(entry), Trackable.class));
+            copy.add(GSON.fromJson(GSON.toJson(entry), Trackable.class));
         }
         return copy;
     }

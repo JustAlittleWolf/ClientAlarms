@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.network.chat.Component;
 
 public final class ScreenAlarmButtons {
@@ -15,6 +16,9 @@ public final class ScreenAlarmButtons {
 
     public static void register() {
         ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> {
+            if (screen instanceof ChatScreen) {
+                return;
+            }
             Button stop = Button.builder(Component.translatable("clientalarms.button.stop"), button -> AlarmEngine.stopAllRinging())
                     .bounds(4, 4, 72, 20)
                     .tooltip(Tooltip.create(Component.translatable("clientalarms.button.stopAll.hover")))

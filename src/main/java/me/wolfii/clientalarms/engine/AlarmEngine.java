@@ -15,14 +15,15 @@ import me.wolfii.clientalarms.time.WorldScope;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class AlarmEngine {
     public static final String DEFAULT_NAME = "default";
@@ -32,6 +33,7 @@ public final class AlarmEngine {
     private static Long lastPlayingAnchor;
     private static Long lastGameAnchor;
     private static String lastWorldKey = "";
+    private static final AtomicBoolean SHUTDOWN = new AtomicBoolean();
 
     private AlarmEngine() {
     }
@@ -159,6 +161,7 @@ public final class AlarmEngine {
         trackable.completed = true;
         trackable.soundCycleTick = -1;
         trackable.snoozeUntilEpoch = 0;
+        ENTRIES.remove(trackable);
         markDirty();
         if (notify && wasRunning) {
             if (kind == TrackableKind.STOPWATCH) {
@@ -296,9 +299,7 @@ public final class AlarmEngine {
                 continue;
             }
             boolean worldOk = entry.worldScope != WorldScope.THIS_WORLD
-                    || entry.worldKey == null
-                    || entry.worldKey.isBlank()
-                    || entry.worldKey.equals(worldKey);
+                    || (entry.worldKey != null && !entry.worldKey.isBlank() && entry.worldKey.equals(worldKey));
             switch (entry.clockMode) {
                 case TICKS_PLAYING -> {
                     if (inWorld && worldOk) {
@@ -333,12 +334,16 @@ public final class AlarmEngine {
             Notifier.ended(ended, ended.silent || !Config.get().playSounds);
         }
         SoundPlayer.tick(minecraft, ringingEntries());
-        if (dirty && now - lastSaveMillis >= 60_000L) {
+        pruneInactive();
+        if (now - lastSaveMillis >= 60_000L && (dirty || hasLiveEntries())) {
             persist();
         }
     }
 
     public static synchronized void persist() {
+        if (SHUTDOWN.get()) {
+            return;
+        }
         dirty = false;
         lastSaveMillis = System.currentTimeMillis();
         StateStore.saveAsync(snapshot());
@@ -348,6 +353,14 @@ public final class AlarmEngine {
         dirty = false;
         lastSaveMillis = System.currentTimeMillis();
         StateStore.saveBlocking(snapshot());
+    }
+
+    public static synchronized void persistOnShutdown() {
+        if (!SHUTDOWN.compareAndSet(false, true)) {
+            return;
+        }
+        persistBlocking();
+        StateStore.shutdown();
     }
 
     public static synchronized Map<TrackableKind, List<Trackable>> visibleOverlay() {
@@ -382,6 +395,30 @@ public final class AlarmEngine {
             }
         }
         return ringing;
+    }
+
+    private static boolean hasLiveEntries() {
+        for (Trackable entry : ENTRIES) {
+            if (entry.running || entry.ringing) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void pruneInactive() {
+        Iterator<Trackable> iterator = ENTRIES.iterator();
+        boolean removed = false;
+        while (iterator.hasNext()) {
+            Trackable entry = iterator.next();
+            if (!entry.running && !entry.ringing) {
+                iterator.remove();
+                removed = true;
+            }
+        }
+        if (removed) {
+            markDirty();
+        }
     }
 
     private static void tickAlarm(Trackable entry, long worldTime, long worldDay, long now, List<Trackable> justEnded) {

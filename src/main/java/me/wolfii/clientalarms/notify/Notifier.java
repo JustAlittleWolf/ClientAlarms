@@ -19,7 +19,7 @@ public final class Notifier {
         if (!Config.get().messageOnStart) {
             return;
         }
-        send(MessageFormats.colored(MessageFormats.formatStarted(trackable)), false, false);
+        send(MessageFormats.colored(MessageFormats.formatStarted(trackable)), false);
     }
 
     public static void ended(Trackable trackable, boolean force) {
@@ -35,14 +35,14 @@ public final class Notifier {
         message.append(button(Component.translatable("clientalarms.button.stop"), stopCommand(trackable), "clientalarms.button.stop.hover"));
         message.append(Component.literal(" "));
         message.append(button(Component.translatable("clientalarms.button.snooze"), "/csnooze", "clientalarms.button.snooze.hover"));
-        send(message, true, force || trackable.silent || soundsOff);
+        send(message, force || trackable.silent || soundsOff);
     }
 
     public static void info(Component component) {
         if (!Config.get().messageOnInfo) {
             return;
         }
-        send(MessageFormats.colored(component), false, false);
+        send(MessageFormats.colored(component), false);
     }
 
     public static void list(Component component) {
@@ -61,7 +61,7 @@ public final class Notifier {
         minecraft.gui.getChat().addClientSystemMessage(component.copy().withStyle(ChatFormatting.RED));
     }
 
-    private static void send(Component component, boolean complete, boolean forceChat) {
+    private static void send(Component component, boolean forceChat) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null && minecraft.gui == null) {
             return;
@@ -79,11 +79,7 @@ public final class Notifier {
         }
         minecraft.gui.setTimes(10, 40, 10);
         minecraft.gui.setTitle(component);
-        if (complete) {
-            minecraft.gui.setSubtitle(Component.translatable("clientalarms.subtitle.actions"));
-        } else {
-            minecraft.gui.setSubtitle(Component.empty());
-        }
+        minecraft.gui.setSubtitle(Component.empty());
     }
 
     private static MutableComponent button(Component label, String command, String hoverKey) {

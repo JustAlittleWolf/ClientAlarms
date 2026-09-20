@@ -29,7 +29,7 @@ public class SoundEngineMixin {
             SoundInstance sound
     ) {
         if (AlarmSoundInstance.ignoresGameVolume(sound)) {
-            return Mth.clamp(volume, 0.0F, 1.0F);
+            return Mth.clamp(volume, 0.0F, 2.0F);
         }
         return original.call(instance, volume, source);
     }
@@ -37,7 +37,7 @@ public class SoundEngineMixin {
     @Inject(method = "calculateVolume(Lnet/minecraft/client/resources/sounds/SoundInstance;)F", at = @At("HEAD"), cancellable = true)
     private void clientalarms$keepAlarmVolume(SoundInstance sound, CallbackInfoReturnable<Float> cir) {
         if (AlarmSoundInstance.ignoresGameVolume(sound)) {
-            cir.setReturnValue(Mth.clamp(sound.getVolume(), 0.0F, 1.0F));
+            cir.setReturnValue(Mth.clamp(sound.getVolume(), 0.0F, 2.0F));
         }
     }
 }

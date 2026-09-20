@@ -173,8 +173,16 @@ public class Config {
 
     public int cycleLengthTicks() {
         int last = 0;
+        boolean any = false;
         for (AlarmNote note : notes) {
+            if (!note.isPlayable()) {
+                continue;
+            }
             last = Math.max(last, note.tick);
+            any = true;
+        }
+        if (!any) {
+            return Math.max(1, silenceTicksBetweenRepeats);
         }
         return last + Math.max(0, silenceTicksBetweenRepeats);
     }

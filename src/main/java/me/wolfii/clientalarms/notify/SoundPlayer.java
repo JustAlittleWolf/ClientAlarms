@@ -1,14 +1,18 @@
 package me.wolfii.clientalarms.notify;
 
+import dev.isxander.yacl3.gui.YACLScreen;
 import me.wolfii.clientalarms.ClientAlarms;
 import me.wolfii.clientalarms.config.AlarmNote;
 import me.wolfii.clientalarms.config.Config;
 import me.wolfii.clientalarms.config.SoundVolumeMode;
 import me.wolfii.clientalarms.engine.Trackable;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.tabs.Tab;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 
@@ -27,10 +31,10 @@ public final class SoundPlayer {
 
     public static void tick(Minecraft minecraft, List<Trackable> ringing) {
         if (previewing) {
-            if (!isConfigScreenOpen(minecraft)) {
+            if (!isSoundCategoryOpen(minecraft)) {
                 stopPreview(minecraft);
             } else {
-                tickCycle(minecraft, previewTick++);
+                tickCycle(minecraft, previewTick++, true);
                 return;
             }
         }
@@ -42,7 +46,7 @@ public final class SoundPlayer {
                 trackable.soundCycleTick = 0;
             }
             if (shouldPlay(trackable)) {
-                tickCycle(minecraft, trackable.soundCycleTick);
+                tickCycle(minecraft, trackable.soundCycleTick, false);
             }
             trackable.soundCycleTick++;
             int length = Math.max(1, Config.get().cycleLengthTicks());
@@ -52,6 +56,9 @@ public final class SoundPlayer {
                 int maxRings = Config.get().autoStopAfterRings;
                 if (maxRings > 0 && trackable.ringsCompleted >= maxRings) {
                     trackable.ringing = false;
+                    if (!trackable.running) {
+                        trackable.completed = true;
+                    }
                 }
             }
         }
@@ -86,19 +93,22 @@ public final class SoundPlayer {
         return trackable.snoozeUntilEpoch <= System.currentTimeMillis();
     }
 
-    private static void tickCycle(Minecraft minecraft, int cycleTick) {
-        if (!Config.get().playSounds || minecraft.getSoundManager() == null) {
+    private static void tickCycle(Minecraft minecraft, int cycleTick, boolean preview) {
+        if ((!preview && !Config.get().playSounds) || minecraft.getSoundManager() == null) {
             return;
         }
         for (AlarmNote note : Config.get().notes) {
+            if (!note.isPlayable()) {
+                continue;
+            }
             if (note.tick == cycleTick) {
-                play(minecraft, note);
+                play(minecraft, note, preview);
             }
         }
     }
 
-    private static void play(Minecraft minecraft, AlarmNote note) {
-        Optional<SoundEvent> event = resolve(note.soundId);
+    private static void play(Minecraft minecraft, AlarmNote note, boolean preview) {
+        Optional<SoundEvent> event = resolveKnown(note.soundId);
         if (event.isEmpty()) {
             ClientAlarms.LOGGER.debug("Unknown alarm sound {}", note.soundId);
             return;
@@ -108,25 +118,50 @@ public final class SoundPlayer {
                 ? new AlarmSoundInstance(event.get(), note.pitch, volume)
                 : SimpleSoundInstance.forUI(event.get(), note.pitch, volume);
         minecraft.getSoundManager().play(instance);
-        if (previewing) {
+        if (preview) {
             PREVIEW.add(instance);
         }
     }
 
-    private static Optional<SoundEvent> resolve(String id) {
-        try {
-            Identifier identifier = Identifier.parse(id.contains(":") ? id : "minecraft:" + id);
-            SoundEvent event = BuiltInRegistries.SOUND_EVENT.getValue(identifier);
-            if (event != null) {
-                return Optional.of(event);
-            }
-            return Optional.of(SoundEvent.createVariableRangeEvent(identifier));
-        } catch (Exception exception) {
+    public static Optional<SoundEvent> resolveKnown(String id) {
+        Identifier identifier = parseSoundId(id);
+        if (identifier == null) {
             return Optional.empty();
+        }
+        SoundEvent event = BuiltInRegistries.SOUND_EVENT.getValue(identifier);
+        return Optional.ofNullable(event);
+    }
+
+    public static Identifier parseSoundId(String id) {
+        if (id == null || id.isBlank()) {
+            return null;
+        }
+        try {
+            return Identifier.parse(id.contains(":") ? id.trim() : "minecraft:" + id.trim());
+        } catch (Exception exception) {
+            return null;
         }
     }
 
-    private static boolean isConfigScreenOpen(Minecraft minecraft) {
-        return minecraft.screen != null && minecraft.screen.getClass().getName().contains("yacl");
+    private static boolean isSoundCategoryOpen(Minecraft minecraft) {
+        Screen screen = minecraft.screen;
+        if (screen == null) {
+            return false;
+        }
+        if (screen instanceof YACLScreen yacl) {
+            return isSoundTab(yacl);
+        }
+        String className = screen.getClass().getName();
+        return className.contains("yacl") || className.contains("YACL") || className.contains("PopupController");
+    }
+
+    private static boolean isSoundTab(YACLScreen screen) {
+        Tab tab = screen.tabManager.getCurrentTab();
+        if (tab == null) {
+            return false;
+        }
+        String title = tab.getTabTitle().getString();
+        String sound = Component.translatable("clientalarms.config.sound").getString();
+        return title.contains(sound);
     }
 }

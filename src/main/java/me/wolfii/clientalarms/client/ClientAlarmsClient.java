@@ -12,19 +12,20 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+
 public class ClientAlarmsClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         Config.get().ensureDefaults();
-        StateStore.load();
+        StateStore.loadBlocking();
         ClientAlarmCommands.register();
         HudElementRegistry.addLast(ClientAlarms.id("overlay"), new OverlayHudElement());
         ScreenAlarmButtons.register();
         ClientTickEvents.END_CLIENT_TICK.register(AlarmEngine::tick);
+        Runtime.getRuntime().addShutdownHook(new Thread(AlarmEngine::persistOnShutdown, "clientalarms-shutdown"));
         ClientLifecycleEvents.CLIENT_STOPPING.register(minecraft -> {
             SoundPlayer.stopPreview(minecraft);
-            AlarmEngine.persistBlocking();
-            StateStore.shutdown();
+            AlarmEngine.persistOnShutdown();
         });
     }
 }

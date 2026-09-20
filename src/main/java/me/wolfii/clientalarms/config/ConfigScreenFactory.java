@@ -128,6 +128,8 @@ public final class ConfigScreenFactory {
 
     private static ConfigCategory sound(Config config) {
         String[] saveName = {""};
+        List<String> presetNames = new ArrayList<>();
+        refreshPresetNames(config, presetNames);
         return ConfigCategory.createBuilder()
                 .name(Component.translatable("clientalarms.config.sound"))
                 .option(bool("playSounds", () -> config.playSounds, value -> config.playSounds = value, true))
@@ -150,11 +152,8 @@ public final class ConfigScreenFactory {
                         .build())
                 .option(Option.<String>createBuilder()
                         .name(Component.translatable("clientalarms.config.preset"))
-                        .binding("Pling", () -> config.selectedPreset, value -> {
-                            config.applyPreset(value);
-                        })
-                        .controller(opt -> CyclingListControllerBuilder.create(opt)
-                                .values(config.presets.stream().map(preset -> preset.name).toList()))
+                        .binding("Pling", () -> config.selectedPreset, config::applyPreset)
+                        .controller(opt -> CyclingListControllerBuilder.create(opt).values(presetNames))
                         .build())
                 .option(Option.<String>createBuilder()
                         .name(Component.translatable("clientalarms.config.presetName"))
@@ -166,6 +165,7 @@ public final class ConfigScreenFactory {
                         .action((screen, option) -> {
                             if (!saveName[0].isBlank()) {
                                 config.saveCurrentAsPreset(saveName[0]);
+                                refreshPresetNames(config, presetNames);
                             }
                         })
                         .build())
@@ -191,6 +191,16 @@ public final class ConfigScreenFactory {
                 .build();
     }
 
+    private static void refreshPresetNames(Config config, List<String> presetNames) {
+        presetNames.clear();
+        for (SoundPreset preset : config.presets) {
+            presetNames.add(preset.name);
+        }
+        if (presetNames.isEmpty()) {
+            presetNames.add("Pling");
+        }
+    }
+
     private static Option<Boolean> bool(String key, Supplier<Boolean> getter, Consumer<Boolean> setter, boolean def) {
         return Option.<Boolean>createBuilder()
                 .name(Component.translatable("clientalarms.config." + key))
@@ -212,25 +222,48 @@ public final class ConfigScreenFactory {
     private static List<String> encodeNotes(List<AlarmNote> notes) {
         List<String> encoded = new ArrayList<>();
         for (AlarmNote note : notes) {
-            encoded.add("%s,%s,%s,%d".formatted(note.soundId, note.volume, note.pitch, note.tick));
+            encoded.add(encodeNote(note));
         }
         return encoded;
+    }
+
+    private static String encodeNote(AlarmNote note) {
+        String base = "%s,%s,%s,%d".formatted(note.soundId, note.volume, note.pitch, note.tick);
+        String error = note.validationError();
+        if (error == null) {
+            return base;
+        }
+        return base + "  [ERROR: " + error + "]";
     }
 
     private static List<AlarmNote> decodeNotes(List<String> values) {
         List<AlarmNote> notes = new ArrayList<>();
         for (String value : values) {
-            String[] parts = value.split(",");
-            AlarmNote note = new AlarmNote();
-            if (parts.length > 0) note.soundId = parts[0].trim();
-            try {
-                if (parts.length > 1) note.volume = Float.parseFloat(parts[1].trim());
-                if (parts.length > 2) note.pitch = Float.parseFloat(parts[2].trim());
-                if (parts.length > 3) note.tick = Integer.parseInt(parts[3].trim());
-            } catch (NumberFormatException ignored) {
-            }
-            notes.add(note);
+            notes.add(decodeNote(value));
         }
         return notes;
+    }
+
+    private static AlarmNote decodeNote(String value) {
+        String raw = value == null ? "" : value.trim().replaceAll("\\s*\\[ERROR:[^\\]]*\\]\\s*$", "");
+        String[] parts = raw.split(",");
+        AlarmNote note = new AlarmNote();
+        if (parts.length > 0) {
+            note.soundId = parts[0].trim();
+        }
+        try {
+            if (parts.length > 1) {
+                note.volume = Float.parseFloat(parts[1].trim());
+            }
+            if (parts.length > 2) {
+                note.pitch = Float.parseFloat(parts[2].trim());
+            }
+            if (parts.length > 3) {
+                note.tick = Integer.parseInt(parts[3].trim());
+            }
+        } catch (NumberFormatException exception) {
+            note.tick = -1;
+        }
+        return note;
     }
 }

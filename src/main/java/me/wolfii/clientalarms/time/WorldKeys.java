@@ -18,15 +18,15 @@ public final class WorldKeys {
     public static String currentWorldKey(Minecraft minecraft) {
         IntegratedServer integrated = minecraft.getSingleplayerServer();
         if (integrated != null) {
-            return "sp:" + integrated.getWorldData().getLevelName();
+            if (integrated.overworld() != null) {
+                return "sp:" + Long.toUnsignedString(integrated.overworld().getSeed());
+            }
+            return "sp:" + Long.toUnsignedString(integrated.getWorldGenSettings().options().seed());
         }
         ServerData server = minecraft.getCurrentServer();
         if (server != null) {
             String address = server.ip == null || server.ip.isBlank() ? server.name : server.ip;
             return "mp:" + address;
-        }
-        if (minecraft.level != null) {
-            return "level:" + minecraft.level.dimension().identifier();
         }
         return "";
     }

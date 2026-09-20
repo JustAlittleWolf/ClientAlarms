@@ -18,10 +18,12 @@ import me.wolfii.clientalarms.time.ClockMode;
 import me.wolfii.clientalarms.time.DateTimeParser;
 import me.wolfii.clientalarms.time.DurationParser;
 import me.wolfii.clientalarms.time.ParsedDuration;
+import me.wolfii.clientalarms.time.WorldKeys;
 import me.wolfii.clientalarms.time.WorldScope;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.network.chat.Component;
 
@@ -32,6 +34,8 @@ public final class ClientAlarmCommands {
     private static final SimpleCommandExceptionType RESERVED = new SimpleCommandExceptionType(Component.translatable("clientalarms.error.reservedName"));
     private static final SimpleCommandExceptionType BAD_SCOPE = new SimpleCommandExceptionType(Component.translatable("clientalarms.error.worldScope"));
     private static final SimpleCommandExceptionType NOTHING_RINGING = new SimpleCommandExceptionType(Component.translatable("clientalarms.error.nothingRinging"));
+    private static final SimpleCommandExceptionType ALARM_PAST = new SimpleCommandExceptionType(Component.translatable("clientalarms.error.alarmInPast"));
+    private static final SimpleCommandExceptionType NOT_IN_WORLD = new SimpleCommandExceptionType(Component.translatable("clientalarms.error.notInWorld"));
 
     private ClientAlarmCommands() {
     }
@@ -167,6 +171,35 @@ public final class ClientAlarmCommands {
         return name;
     }
 
+    private static void requireFuture(AlarmTarget target) throws CommandSyntaxException {
+        Minecraft minecraft = Minecraft.getInstance();
+        switch (target) {
+            case AlarmTarget.WallTime wallTime -> {
+                if (!wallTime.when().isAfter(DateTimeParser.now())) {
+                    throw ALARM_PAST.create();
+                }
+            }
+            case AlarmTarget.GameTime gameTime -> {
+                long worldTime = WorldKeys.currentWorldTime(minecraft);
+                if (worldTime >= 0 && gameTime.worldTime() <= worldTime) {
+                    throw ALARM_PAST.create();
+                }
+            }
+            case AlarmTarget.GameDay gameDay -> {
+                long worldDay = WorldKeys.currentWorldDay(minecraft);
+                if (worldDay >= 0 && gameDay.day() <= worldDay) {
+                    throw ALARM_PAST.create();
+                }
+            }
+        }
+    }
+
+    private static void requireWorldForScope(WorldScope scope) throws CommandSyntaxException {
+        if (scope == WorldScope.THIS_WORLD && WorldKeys.currentWorldKey(Minecraft.getInstance()).isBlank()) {
+            throw NOT_IN_WORLD.create();
+        }
+    }
+
     private static int list(TrackableKind kind) {
         List<Trackable> entries = AlarmEngine.ofKind(kind);
         if (entries.isEmpty()) {
@@ -181,8 +214,10 @@ public final class ClientAlarmCommands {
     }
 
     private static int createAlarm(CommandContext<FabricClientCommandSource> context, String name) throws CommandSyntaxException {
+        requireName(name);
         try {
             AlarmTarget target = DateTimeParser.parse(StringArgumentType.getString(context, "when"), Config.get().dateOrder, DateTimeParser.now());
+            requireFuture(target);
             AlarmEngine.startAlarm(name, target, false);
             return 1;
         } catch (IllegalArgumentException exception) {
@@ -202,6 +237,7 @@ public final class ClientAlarmCommands {
         if (!mode.supportsWorldScope() && scope == WorldScope.THIS_WORLD) {
             throw BAD_SCOPE.create();
         }
+        requireWorldForScope(scope);
         try {
             ParsedDuration duration = DurationParser.parse(StringArgumentType.getString(context, "duration"));
             AlarmEngine.startTimer(name, duration, mode, scope, repeatAfter, repeatCount);
@@ -215,6 +251,7 @@ public final class ClientAlarmCommands {
         if (!mode.supportsWorldScope() && scope == WorldScope.THIS_WORLD) {
             throw BAD_SCOPE.create();
         }
+        requireWorldForScope(scope);
         AlarmEngine.toggleStopwatch(name, mode, scope);
         return 1;
     }

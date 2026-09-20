@@ -19,4 +19,27 @@ public class AlarmNote {
     public AlarmNote copy() {
         return new AlarmNote(soundId, volume, pitch, tick);
     }
+
+    public String validationError() {
+        if (soundId == null || soundId.isBlank()) {
+            return "empty sound";
+        }
+        if (tick < 0) {
+            return "negative tick";
+        }
+        if (volume < 0 || Float.isNaN(volume)) {
+            return "invalid volume";
+        }
+        if (pitch <= 0 || Float.isNaN(pitch)) {
+            return "invalid pitch";
+        }
+        if (me.wolfii.clientalarms.notify.SoundPlayer.resolveKnown(soundId).isEmpty()) {
+            return "unknown sound";
+        }
+        return null;
+    }
+
+    public boolean isPlayable() {
+        return validationError() == null;
+    }
 }
