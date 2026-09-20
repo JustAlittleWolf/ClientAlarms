@@ -4,6 +4,7 @@
   "package": "me.wolfii.clientalarms.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "SoundEngineMixin"
   ],
   "injectors": {
     "defaultRequire": 1
