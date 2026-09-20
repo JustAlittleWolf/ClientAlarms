@@ -3,10 +3,9 @@ package me.wolfii.clienttimers.hud;
 import me.wolfii.clienttimers.config.Config;
 import me.wolfii.clienttimers.config.OverlaySettings;
 import me.wolfii.clienttimers.config.TextAlign;
-import me.wolfii.clienttimers.engine.AlarmEngine;
-import me.wolfii.clienttimers.engine.Trackable;
-import me.wolfii.clienttimers.engine.TrackableKind;
-import me.wolfii.clienttimers.notify.MessageFormats;
+import me.wolfii.clienttimers.timer.AlarmEngine;
+import me.wolfii.clienttimers.timer.Trackable;
+import me.wolfii.clienttimers.timer.TrackableKind;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -66,12 +65,12 @@ public class OverlayHudElement implements HudElement {
             int x = anchorX(settings, width);
             int y = anchorY(settings, height);
             if (settings.showHeading) {
-                draw(graphics, font, MessageFormats.heading(kind), x, y, settings.align, 0xFFFFFF);
+                draw(graphics, font, OverlayText.heading(kind), x, y, settings.align, 0xFFFFFF);
                 y += font.lineHeight + 1;
             }
             for (Trackable entry : entries) {
                 int color = entry.ringing ? 0xFF5555 : 0xFFFFFF;
-                draw(graphics, font, MessageFormats.overlayLine(entry), x, y, settings.align, color);
+                draw(graphics, font, OverlayText.overlayLine(entry), x, y, settings.align, color);
                 y += font.lineHeight + 1;
             }
         }

@@ -1,7 +1,6 @@
-package me.wolfii.clienttimers.time;
+package me.wolfii.clienttimers.world;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.*;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.server.IntegratedServer;
 

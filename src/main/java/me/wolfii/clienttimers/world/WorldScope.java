@@ -1,4 +1,4 @@
-package me.wolfii.clienttimers.time;
+package me.wolfii.clienttimers.world;
 
 public enum WorldScope {
     THIS_WORLD,

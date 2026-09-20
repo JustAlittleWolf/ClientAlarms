@@ -3,8 +3,9 @@ package me.wolfii.clienttimers.persist;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import me.wolfii.clienttimers.client.ClientTimersClient;
-import me.wolfii.clienttimers.engine.AlarmEngine;
-import me.wolfii.clienttimers.engine.Trackable;
+import me.wolfii.clienttimers.timer.AlarmEngine;
+import me.wolfii.clienttimers.timer.StoppedNotice;
+import me.wolfii.clienttimers.timer.Trackable;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
@@ -36,25 +37,22 @@ public final class StateStore {
 
     public static void loadBlocking() {
         Snapshot snapshot = readSnapshot();
-        AlarmEngine.replaceAll(snapshot.entries);
+        AlarmEngine.replaceAll(snapshot.entries, snapshot.stoppedOnLeave);
     }
 
-    public static void saveAsync(List<Trackable> entries) {
+    public static void saveAsync(List<Trackable> entries, List<StoppedNotice> stoppedOnLeave) {
         if (CLOSED.get()) {
             return;
         }
-        Snapshot snapshot = new Snapshot();
-        snapshot.entries = copy(entries);
+        Snapshot snapshot = snapshotOf(entries, stoppedOnLeave);
         try {
             IO.execute(() -> writeSnapshot(snapshot));
         } catch (RejectedExecutionException ignored) {
         }
     }
 
-    public static void saveBlocking(List<Trackable> entries) {
-        Snapshot snapshot = new Snapshot();
-        snapshot.entries = copy(entries);
-        writeSnapshot(snapshot);
+    public static void saveBlocking(List<Trackable> entries, List<StoppedNotice> stoppedOnLeave) {
+        writeSnapshot(snapshotOf(entries, stoppedOnLeave));
     }
 
     public static void shutdown() {
@@ -65,6 +63,13 @@ public final class StateStore {
         } catch (InterruptedException interrupted) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private static Snapshot snapshotOf(List<Trackable> entries, List<StoppedNotice> stoppedOnLeave) {
+        Snapshot snapshot = new Snapshot();
+        snapshot.entries = copy(entries);
+        snapshot.stoppedOnLeave = stoppedOnLeave == null ? new ArrayList<>() : new ArrayList<>(stoppedOnLeave);
+        return snapshot;
     }
 
     private static Snapshot readSnapshot() {
@@ -113,5 +118,6 @@ public final class StateStore {
 
     public static class Snapshot {
         public List<Trackable> entries = new ArrayList<>();
+        public List<StoppedNotice> stoppedOnLeave = new ArrayList<>();
     }
 }

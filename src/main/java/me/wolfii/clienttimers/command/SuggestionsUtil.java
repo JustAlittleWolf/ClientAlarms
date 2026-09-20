@@ -2,8 +2,8 @@ package me.wolfii.clienttimers.command;
 
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import me.wolfii.clienttimers.engine.AlarmEngine;
-import me.wolfii.clienttimers.engine.TrackableKind;
+import me.wolfii.clienttimers.timer.AlarmEngine;
+import me.wolfii.clienttimers.timer.TrackableKind;
 import me.wolfii.clienttimers.time.ClockMode;
 import net.minecraft.commands.SharedSuggestionProvider;
 

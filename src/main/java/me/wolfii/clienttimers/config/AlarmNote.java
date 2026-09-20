@@ -1,5 +1,7 @@
 package me.wolfii.clienttimers.config;
 
+import me.wolfii.clienttimers.sound.SoundPlayer;
+
 public class AlarmNote {
     public String soundId = "minecraft:block.note_block.pling";
     public float volume = 1.0f;
@@ -33,7 +35,7 @@ public class AlarmNote {
         if (pitch <= 0 || Float.isNaN(pitch)) {
             return "invalid pitch";
         }
-        if (me.wolfii.clienttimers.notify.SoundPlayer.resolveKnown(soundId).isEmpty()) {
+        if (SoundPlayer.resolveKnown(soundId).isEmpty()) {
             return "unknown sound";
         }
         return null;

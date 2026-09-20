@@ -2,7 +2,7 @@ package me.wolfii.clienttimers.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import me.wolfii.clienttimers.notify.AlarmSoundInstance;
+import me.wolfii.clienttimers.sound.AlarmSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.sounds.SoundSource;

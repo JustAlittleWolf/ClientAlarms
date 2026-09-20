@@ -2,11 +2,10 @@ package me.wolfii.clienttimers.client;
 
 import me.wolfii.clienttimers.command.ClientAlarmCommands;
 import me.wolfii.clienttimers.config.Config;
-import me.wolfii.clienttimers.engine.AlarmEngine;
 import me.wolfii.clienttimers.hud.OverlayHudElement;
-import me.wolfii.clienttimers.hud.ScreenAlarmButtons;
-import me.wolfii.clienttimers.notify.SoundPlayer;
 import me.wolfii.clienttimers.persist.StateStore;
+import me.wolfii.clienttimers.sound.SoundPlayer;
+import me.wolfii.clienttimers.timer.AlarmEngine;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -24,11 +23,11 @@ public class ClientTimersClient implements ClientModInitializer {
         StateStore.loadBlocking();
         ClientAlarmCommands.register();
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("clienttimers", "overlay"), new OverlayHudElement());
-        ScreenAlarmButtons.register();
         ClientTickEvents.END_CLIENT_TICK.register(AlarmEngine::tick);
         Runtime.getRuntime().addShutdownHook(new Thread(AlarmEngine::persistOnShutdown, "clienttimers-shutdown"));
         ClientLifecycleEvents.CLIENT_STOPPING.register(minecraft -> {
             SoundPlayer.stopPreview(minecraft);
+            SoundPlayer.stopRinging(minecraft);
             AlarmEngine.persistOnShutdown();
         });
     }

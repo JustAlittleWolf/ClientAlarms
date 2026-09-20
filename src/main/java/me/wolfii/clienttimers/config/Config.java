@@ -4,6 +4,7 @@ import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
 import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
 import me.wolfii.clienttimers.time.DateOrder;
+import me.wolfii.clienttimers.timer.TrackableKind;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.Identifier;
@@ -34,19 +35,6 @@ public class Config {
     public MessageDisplay messageDisplay = MessageDisplay.CHAT;
 
     @SerialEntry
-    public String alarmEndedFormat = "";
-    @SerialEntry
-    public String timerEndedFormat = "";
-    @SerialEntry
-    public String stopwatchStoppedFormat = "";
-    @SerialEntry
-    public String alarmStartedFormat = "";
-    @SerialEntry
-    public String timerStartedFormat = "";
-    @SerialEntry
-    public String stopwatchStartedFormat = "";
-
-    @SerialEntry
     public DateOrder dateOrder = DateOrder.MONTH_DAY;
 
     @SerialEntry
@@ -58,8 +46,6 @@ public class Config {
 
     @SerialEntry
     public boolean overlayByDefault = true;
-    @SerialEntry
-    public boolean screenActionButtons = true;
     @SerialEntry
     public boolean silentByDefault = false;
     @SerialEntry
@@ -118,7 +104,7 @@ public class Config {
         HANDLER.save();
     }
 
-    public OverlaySettings overlayFor(me.wolfii.clienttimers.engine.TrackableKind kind) {
+    public OverlaySettings overlayFor(TrackableKind kind) {
         return switch (kind) {
             case ALARM -> alarmOverlay;
             case TIMER -> timerOverlay;
