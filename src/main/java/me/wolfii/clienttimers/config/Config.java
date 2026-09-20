@@ -35,10 +35,10 @@ public class Config {
     public MessageDisplay messageDisplay = MessageDisplay.CHAT;
 
     @SerialEntry
-    public DateOrder dateOrder = DateOrder.MONTH_DAY;
+    public DateOrder dateOrder = DateOrder.DAY_MONTH;
 
     @SerialEntry
-    public OverlaySettings alarmOverlay = new OverlaySettings();
+    public OverlaySettings alarmOverlay = OverlaySettings.at(8, 0);
     @SerialEntry
     public OverlaySettings timerOverlay = OverlaySettings.at(8, 40);
     @SerialEntry
@@ -64,7 +64,7 @@ public class Config {
     @SerialEntry
     public List<SoundPreset> presets = new ArrayList<>();
     @SerialEntry
-    public String selectedPreset = "Pling";
+    public String selectedPreset = "Beep";
 
     public static Config getConfig() {
         return HANDLER.instance();
@@ -76,26 +76,13 @@ public class Config {
 
     public static List<SoundPreset> defaultPresets() {
         List<SoundPreset> defaults = new ArrayList<>();
-        defaults.add(new SoundPreset("Pling", 40, List.of(
+        defaults.add(new SoundPreset("Beep", 40, List.of(
             new AlarmNote("minecraft:block.note_block.pling", 1.0f, 1.0f, 0),
-            new AlarmNote("minecraft:block.note_block.pling", 1.0f, 1.5f, 6)
+            new AlarmNote("minecraft:block.note_block.pling", 1.0f, 1.0f, 4),
+            new AlarmNote("minecraft:block.note_block.pling", 1.0f, 1.0f, 8)
         )));
         defaults.add(new SoundPreset("Bell", 30, List.of(
-            new AlarmNote("minecraft:block.note_block.bell", 1.0f, 0.8f, 0),
-            new AlarmNote("minecraft:block.note_block.bell", 1.0f, 1.2f, 10)
-        )));
-        defaults.add(new SoundPreset("Bit", 20, List.of(
-            new AlarmNote("minecraft:block.note_block.bit", 1.0f, 1.0f, 0),
-            new AlarmNote("minecraft:block.note_block.bit", 1.0f, 1.2f, 4),
-            new AlarmNote("minecraft:block.note_block.bit", 1.0f, 1.5f, 8)
-        )));
-        defaults.add(new SoundPreset("Chime", 50, List.of(
-            new AlarmNote("minecraft:block.note_block.chime", 1.0f, 1.0f, 0),
-            new AlarmNote("minecraft:block.note_block.chime", 0.8f, 1.4f, 8)
-        )));
-        defaults.add(new SoundPreset("Bass", 40, List.of(
-            new AlarmNote("minecraft:block.note_block.bass", 1.0f, 0.7f, 0),
-            new AlarmNote("minecraft:block.note_block.bass", 1.0f, 0.9f, 8)
+            new AlarmNote("minecraft:block.note_block.bell", 1.0f, 1.0f, 0)
         )));
         return defaults;
     }

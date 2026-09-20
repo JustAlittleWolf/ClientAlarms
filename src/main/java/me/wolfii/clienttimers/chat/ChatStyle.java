@@ -20,7 +20,7 @@ final class ChatStyle {
     }
 
     static MutableComponent name(String name) {
-        return Component.literal("'" + name + "'").withStyle(style -> style.withColor(rgb(NAME)));
+        return Component.literal(name).withStyle(style -> style.withColor(rgb(NAME)));
     }
 
     static MutableComponent duration(Object value) {

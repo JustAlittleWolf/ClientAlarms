@@ -57,7 +57,7 @@ public final class DurationParser {
         if (mode == ClockMode.TICKS_PLAYING) {
             return formatTicks(duration.ticksFor(mode));
         }
-        return formatMillis(duration.millisFor(mode));
+        return formatMillis(duration.millis());
     }
 
     public static String formatTicks(long ticks) {

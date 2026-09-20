@@ -8,10 +8,7 @@ public record ParsedDuration(long extraTicks, long extraMillis, String raw) {
         return extraTicks + Math.round(extraMillis / 50.0);
     }
 
-    public long millisFor(ClockMode mode) {
-        if (mode == ClockMode.TICKS_PLAYING) {
-            return extraTicks * 50L + extraMillis;
-        }
+    public long millis() {
         return extraTicks * 50L + extraMillis;
     }
 

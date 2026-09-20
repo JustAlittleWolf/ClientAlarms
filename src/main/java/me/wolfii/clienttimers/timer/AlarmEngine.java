@@ -88,7 +88,7 @@ public final class AlarmEngine {
         return name;
     }
 
-    public static synchronized Trackable startAlarm(String name, AlarmTarget target, boolean silentOverride) {
+    public static synchronized void startAlarm(String name, AlarmTarget target, boolean silentOverride) {
         String resolved = resolveName(name);
         Trackable trackable = upsert(TrackableKind.ALARM, resolved);
         resetCommon(trackable, ClockMode.REAL_TIME, WorldScope.ANY_WORLD);
@@ -96,10 +96,9 @@ public final class AlarmEngine {
         applyTarget(trackable, target);
         markDirty();
         Notifier.started(trackable);
-        return trackable;
     }
 
-    public static synchronized Trackable startTimer(
+    public static synchronized void startTimer(
         String name,
         ParsedDuration duration,
         ClockMode mode,
@@ -112,7 +111,7 @@ public final class AlarmEngine {
         resetCommon(trackable, mode, scope);
         trackable.durationRaw = duration.raw();
         trackable.durationTicks = Math.max(1, duration.ticksFor(mode));
-        trackable.durationMillis = Math.max(1, duration.millisFor(mode));
+        trackable.durationMillis = Math.max(1, duration.millis());
         trackable.elapsedTicks = 0;
         trackable.elapsedMillis = 0;
         trackable.wallAnchorEpoch = System.currentTimeMillis();
@@ -120,7 +119,7 @@ public final class AlarmEngine {
             trackable.hasRepeat = true;
             trackable.repeatRaw = repeatAfter.raw();
             trackable.repeatTicks = Math.max(1, repeatAfter.ticksFor(mode));
-            trackable.repeatMillis = Math.max(1, repeatAfter.millisFor(mode));
+            trackable.repeatMillis = Math.max(1, repeatAfter.millis());
             trackable.remainingRepeats = repeatCount == null ? -1 : Math.max(0, repeatCount);
         } else {
             trackable.hasRepeat = false;
@@ -128,15 +127,14 @@ public final class AlarmEngine {
         }
         markDirty();
         Notifier.started(trackable);
-        return trackable;
     }
 
-    public static synchronized Trackable toggleStopwatch(String name, ClockMode mode, WorldScope scope) {
+    public static synchronized void toggleStopwatch(String name, ClockMode mode, WorldScope scope) {
         String resolved = resolveName(name);
         Optional<Trackable> existing = find(TrackableKind.STOPWATCH, resolved);
         if (existing.isPresent() && existing.get().running) {
             stop(TrackableKind.STOPWATCH, resolved, true);
-            return existing.get();
+            return;
         }
         Trackable trackable = upsert(TrackableKind.STOPWATCH, resolved);
         resetCommon(trackable, mode, scope);
@@ -145,7 +143,6 @@ public final class AlarmEngine {
         trackable.wallAnchorEpoch = System.currentTimeMillis();
         markDirty();
         Notifier.started(trackable);
-        return trackable;
     }
 
     public static synchronized boolean stop(TrackableKind kind, String name, boolean notify) {
@@ -204,7 +201,7 @@ public final class AlarmEngine {
     }
 
     public static synchronized int snoozeAll(ParsedDuration duration) {
-        long until = System.currentTimeMillis() + Math.max(1000L, duration.millisFor(ClockMode.REAL_TIME));
+        long until = System.currentTimeMillis() + Math.max(1000L, duration.millis());
         int count = 0;
         for (Trackable entry : ENTRIES) {
             if (entry.ringing) {
@@ -228,21 +225,6 @@ public final class AlarmEngine {
             }
         }
         return false;
-    }
-
-    public static synchronized int stopAllRinging() {
-        int count = 0;
-        for (Trackable entry : new ArrayList<>(ENTRIES)) {
-            if (entry.ringing || entry.pendingJoinRing) {
-                if (stop(entry.kind, entry.name, false)) {
-                    count++;
-                }
-            }
-        }
-        if (count > 0) {
-            Notifier.info(TimerMessages.stoppedAll(count));
-        }
-        return count;
     }
 
     public static synchronized void tick(Minecraft minecraft) {
@@ -488,7 +470,7 @@ public final class AlarmEngine {
 
     private static void completeTimer(Trackable entry, List<Trackable> justEnded, boolean inWorld) {
         deliverCompletion(entry, inWorld, justEnded);
-        if (entry.hasRepeat && (entry.remainingRepeats > 0 || entry.remainingRepeats < 0)) {
+        if (entry.hasRepeat && entry.remainingRepeats != 0) {
             if (entry.remainingRepeats > 0) {
                 entry.remainingRepeats--;
             }
