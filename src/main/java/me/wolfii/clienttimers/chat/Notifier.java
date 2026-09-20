@@ -14,7 +14,7 @@ public final class Notifier {
         if (!Config.getConfig().messageOnStart) {
             return;
         }
-        send(TimerMessages.started(trackable), false);
+        sendChat(TimerMessages.started(trackable));
     }
 
     public static void ended(Trackable trackable, boolean force) {
@@ -22,49 +22,45 @@ public final class Notifier {
         if (!force && !Config.getConfig().messageOnComplete && !soundsOff && !trackable.silent) {
             return;
         }
-        Component message = TimerMessages.ended(trackable);
-        boolean forceChat = force || trackable.silent || soundsOff;
-        if (usesChat(forceChat)) {
-            message = TimerMessages.withStopAndSnooze(trackable, message);
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.level == null || minecraft.player == null) {
+            return;
         }
-        send(message, forceChat);
+        MessageDisplay display = Config.getConfig().messageDisplay;
+        if (display == MessageDisplay.CHAT) {
+            sendChat(TimerMessages.withStopAndSnooze(trackable, TimerMessages.ended(trackable)));
+            return;
+        }
+        Component compact = TimerMessages.endedCompact(trackable);
+        if (display == MessageDisplay.ACTIONBAR) {
+            minecraft.player.sendOverlayMessage(compact);
+            return;
+        }
+        minecraft.gui.setTimes(10, 40, 10);
+        minecraft.gui.setTitle(compact);
+        minecraft.gui.setSubtitle(Component.empty());
     }
 
     public static void info(Component component) {
         if (!Config.getConfig().messageOnInfo) {
             return;
         }
-        send(component, false);
+        sendChat(component);
     }
 
     public static void deferred(Component component) {
-        send(component, true);
+        sendChat(component);
     }
 
     public static void list(Component component) {
-        Minecraft.getInstance().gui.getChat().addClientSystemMessage(component);
+        sendChat(component);
     }
 
-    private static boolean usesChat(boolean forceChat) {
-        Minecraft minecraft = Minecraft.getInstance();
-        return forceChat || Config.getConfig().messageDisplay == MessageDisplay.CHAT || minecraft.player == null;
-    }
-
-    private static void send(Component component, boolean forceChat) {
+    private static void sendChat(Component component) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null || minecraft.player == null) {
             return;
         }
-        if (usesChat(forceChat)) {
-            minecraft.gui.getChat().addClientSystemMessage(component);
-            return;
-        }
-        if (Config.getConfig().messageDisplay == MessageDisplay.ACTIONBAR) {
-            minecraft.player.sendOverlayMessage(component);
-            return;
-        }
-        minecraft.gui.setTimes(10, 40, 10);
-        minecraft.gui.setTitle(component);
-        minecraft.gui.setSubtitle(ChatStyle.wording("clienttimers.subtitle.actions"));
+        minecraft.gui.getChat().addClientSystemMessage(component);
     }
 }
