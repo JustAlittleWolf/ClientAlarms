@@ -3,6 +3,7 @@ package me.wolfii.clientalarms.notify;
 import me.wolfii.clientalarms.ClientAlarms;
 import me.wolfii.clientalarms.config.AlarmNote;
 import me.wolfii.clientalarms.config.Config;
+import me.wolfii.clientalarms.config.SoundVolumeMode;
 import me.wolfii.clientalarms.engine.Trackable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -103,7 +104,9 @@ public final class SoundPlayer {
             return;
         }
         float volume = Math.max(0.0f, note.volume) * Config.get().masterVolume;
-        SimpleSoundInstance instance = SimpleSoundInstance.forUI(event.get(), note.pitch, volume);
+        SoundInstance instance = Config.get().soundVolumeMode == SoundVolumeMode.ALARM
+                ? new AlarmSoundInstance(event.get(), note.pitch, volume)
+                : SimpleSoundInstance.forUI(event.get(), note.pitch, volume);
         minecraft.getSoundManager().play(instance);
         if (previewing) {
             PREVIEW.add(instance);

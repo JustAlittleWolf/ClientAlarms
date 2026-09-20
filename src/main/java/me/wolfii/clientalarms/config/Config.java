@@ -59,12 +59,16 @@ public class Config {
     @SerialEntry
     public boolean overlayByDefault = true;
     @SerialEntry
+    public boolean screenActionButtons = true;
+    @SerialEntry
     public boolean silentByDefault = false;
     @SerialEntry
     public int autoStopAfterRings = 0;
 
     @SerialEntry
     public boolean playSounds = true;
+    @SerialEntry
+    public SoundVolumeMode soundVolumeMode = SoundVolumeMode.ALARM;
     @SerialEntry
     public int silenceTicksBetweenRepeats = 40;
     @SerialEntry

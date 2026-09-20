@@ -32,6 +32,8 @@
 
   "clientalarms.config.overlayByDefault": "Show new items on overlay",
   "clientalarms.config.overlayByDefault.desc": "Newly started alarms, timers and stopwatches appear on the HUD unless hidden with the hide command.",
+  "clientalarms.config.screenActionButtons": "Stop/snooze buttons on screens",
+  "clientalarms.config.screenActionButtons.desc": "While any menu or screen is open and an alarm or timer is sounding, show Stop and Snooze buttons in the top left. The running-timer overlay stays in-world only.",
   "clientalarms.config.silentByDefault": "Silent by default",
   "clientalarms.config.silentByDefault.desc": "Newly started alarms and timers only show a message and do not play a sound.",
   "clientalarms.config.autoStopAfterRings": "Stop after rings",
@@ -57,6 +59,8 @@
 
   "clientalarms.config.playSounds": "Play sounds",
   "clientalarms.config.playSounds.desc": "Master switch for alarm audio. If this is off, completion messages are shown even when completion messages are disabled.",
+  "clientalarms.config.soundVolumeMode": "Sound volume",
+  "clientalarms.config.soundVolumeMode.desc": "Alarm uses this mod's volume slider and still plays when Minecraft is muted. Game follows Minecraft's UI/master volume.",
   "clientalarms.config.masterVolume": "Master volume",
   "clientalarms.config.silenceTicks": "Silence between repeats",
   "clientalarms.config.silenceTicks.desc": "Ticks to wait after the last note before the sequence repeats.",
@@ -83,11 +87,13 @@
 
   "clientalarms.button.stop": "Stop",
   "clientalarms.button.stop.hover": "Stop this alarm",
+  "clientalarms.button.stopAll.hover": "Stop every sounding alarm or timer",
   "clientalarms.button.snooze": "Snooze 5min",
   "clientalarms.button.snooze.hover": "Silence currently ringing alarms for 5 minutes",
   "clientalarms.subtitle.actions": "Open chat to Stop or Snooze",
   "clientalarms.message.missed": "(missed)",
   "clientalarms.message.stopped": "Stopped %s",
+  "clientalarms.message.stoppedAll": "Stopped %s sounding alarm(s)",
   "clientalarms.message.silentOn": "%s is now silent",
   "clientalarms.message.silentOff": "%s will play a sound",
   "clientalarms.message.shown": "Showing %s on the overlay",

@@ -223,6 +223,31 @@ public final class AlarmEngine {
         return count;
     }
 
+    public static synchronized boolean hasRinging() {
+        long now = System.currentTimeMillis();
+        for (Trackable entry : ENTRIES) {
+            if (entry.ringing && entry.snoozeUntilEpoch <= now) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static synchronized int stopAllRinging() {
+        int count = 0;
+        for (Trackable entry : new ArrayList<>(ENTRIES)) {
+            if (entry.ringing) {
+                if (stop(entry.kind, entry.name, false)) {
+                    count++;
+                }
+            }
+        }
+        if (count > 0) {
+            Notifier.info(Component.translatable("clientalarms.message.stoppedAll", count));
+        }
+        return count;
+    }
+
     public static synchronized void tick(Minecraft minecraft) {
         long now = System.currentTimeMillis();
         boolean inWorld = WorldKeys.inWorld(minecraft);
