@@ -39,14 +39,14 @@ public class Config {
     @SerialEntry
     public boolean silentByDefault = false;
     @SerialEntry
-    public int autoStopAfterRings = 0;
+    public int autoStopAfterRings = 3;
 
     @SerialEntry
     public boolean playSounds = true;
     @SerialEntry
     public SoundVolumeMode soundVolumeMode = SoundVolumeMode.ALARM;
     @SerialEntry
-    public int silenceTicksBetweenRepeats = 40;
+    public int silenceTicksBetweenRepeats = 30;
     @SerialEntry
     public float masterVolume = 1.0f;
     @SerialEntry

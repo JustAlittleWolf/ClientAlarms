@@ -49,7 +49,7 @@ public final class ConfigScreenFactory {
             .option(bool("messageOnStart", () -> config.messageOnStart, value -> config.messageOnStart = value, true))
             .option(bool("messageOnInfo", () -> config.messageOnInfo, value -> config.messageOnInfo = value, true))
             .option(enumerated("messageDisplay", MessageDisplay.class, MessageDisplay.CHAT, () -> config.messageDisplay, value -> config.messageDisplay = value, true))
-            .option(enumerated("dateOrder", DateOrder.class, DateOrder.MONTH_DAY, () -> config.dateOrder, value -> config.dateOrder = value, true))
+            .option(enumerated("dateOrder", DateOrder.class, DateOrder.DAY_MONTH, () -> config.dateOrder, value -> config.dateOrder = value, true))
             .option(bool("silentByDefault", () -> config.silentByDefault, value -> config.silentByDefault = value, false))
             .option(intSlider("autoStopAfterRings", 0, 20, 0, () -> config.autoStopAfterRings, value -> config.autoStopAfterRings = value, true))
             .build();
