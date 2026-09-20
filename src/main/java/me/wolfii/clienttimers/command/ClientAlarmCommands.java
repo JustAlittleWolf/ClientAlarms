@@ -54,7 +54,7 @@ public final class ClientAlarmCommands {
     private static LiteralArgumentBuilder<FabricClientCommandSource> buildAlarm() {
         var command = ClientCommands.literal("calarm");
         attachActions(command, TrackableKind.ALARM, true);
-        command.then(ClientCommands.argument("when", StringArgumentType.string())
+        command.then(ClientCommands.argument("when", TokenArgument.token())
             .suggests((context, builder) -> SuggestionsUtil.alarmTimes(builder))
             .executes(context -> createAlarm(context, AlarmEngine.DEFAULT_NAME))
             .then(ClientCommands.argument("name", StringArgumentType.word())
@@ -66,7 +66,7 @@ public final class ClientAlarmCommands {
     private static LiteralArgumentBuilder<FabricClientCommandSource> buildTimer() {
         var command = ClientCommands.literal("ctimer");
         attachActions(command, TrackableKind.TIMER, true);
-        command.then(ClientCommands.argument("duration", StringArgumentType.string())
+        command.then(ClientCommands.argument("duration", TokenArgument.token())
             .suggests((context, builder) -> SuggestionsUtil.durations(builder))
             .executes(context -> createTimer(context, AlarmEngine.DEFAULT_NAME, ClockMode.TIME_PLAYING, WorldScope.ANY_WORLD, null, null))
             .then(ClientCommands.argument("name", StringArgumentType.word())
@@ -91,7 +91,7 @@ public final class ClientAlarmCommands {
     }
 
     private static com.mojang.brigadier.builder.RequiredArgumentBuilder<FabricClientCommandSource, String> repeatNode(WorldScope scope) {
-        return ClientCommands.argument("repeatAfter", StringArgumentType.string())
+        return ClientCommands.argument("repeatAfter", TokenArgument.token())
             .suggests((context, builder) -> SuggestionsUtil.durations(builder))
             .executes(context -> createTimer(
                 context,
@@ -132,7 +132,7 @@ public final class ClientAlarmCommands {
     private static LiteralArgumentBuilder<FabricClientCommandSource> buildSnooze() {
         return ClientCommands.literal("csnooze")
             .executes(context -> snooze(DurationParser.parse("5min")))
-            .then(ClientCommands.argument("duration", StringArgumentType.string())
+            .then(ClientCommands.argument("duration", TokenArgument.token())
                 .suggests((context, builder) -> SuggestionsUtil.durations(builder))
                 .executes(context -> snooze(durationArg(context, "duration"))));
     }
@@ -213,7 +213,7 @@ public final class ClientAlarmCommands {
     private static int createAlarm(CommandContext<FabricClientCommandSource> context, String name) throws CommandSyntaxException {
         requireName(name);
         try {
-            AlarmTarget target = DateTimeParser.parse(StringArgumentType.getString(context, "when"), Config.getConfig().dateOrder, DateTimeParser.now());
+            AlarmTarget target = DateTimeParser.parse(TokenArgument.get(context, "when"), Config.getConfig().dateOrder, DateTimeParser.now());
             requireFuture(target);
             AlarmEngine.startAlarm(name, target, false);
             return 1;
@@ -236,7 +236,7 @@ public final class ClientAlarmCommands {
         }
         requireWorldForScope(scope);
         try {
-            ParsedDuration duration = DurationParser.parse(StringArgumentType.getString(context, "duration"));
+            ParsedDuration duration = DurationParser.parse(TokenArgument.get(context, "duration"));
             AlarmEngine.startTimer(name, duration, mode, scope, repeatAfter, repeatCount);
             return 1;
         } catch (IllegalArgumentException exception) {
@@ -271,7 +271,7 @@ public final class ClientAlarmCommands {
 
     private static ParsedDuration durationArg(CommandContext<FabricClientCommandSource> context, String name) throws CommandSyntaxException {
         try {
-            return DurationParser.parse(StringArgumentType.getString(context, name));
+            return DurationParser.parse(TokenArgument.get(context, name));
         } catch (IllegalArgumentException exception) {
             throw new SimpleCommandExceptionType(Component.translatable("clienttimers.error.invalidDuration", exception.getMessage())).create();
         }

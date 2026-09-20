@@ -55,17 +55,19 @@ public final class DurationParser {
 
     public static String format(ParsedDuration duration, ClockMode mode) {
         if (mode == ClockMode.TICKS_PLAYING) {
-            return formatTicks(duration.ticksFor(mode));
+            return formatPlayingTicks(duration.ticksFor(mode));
         }
         return formatMillis(duration.millis());
     }
 
     public static String formatTicks(long ticks) {
         if (ticks < 0) ticks = 0;
-        if (ticks < 20) {
-            return ticks + "t";
-        }
         return formatMillis(ticks * 50L);
+    }
+
+    public static String formatPlayingTicks(long ticks) {
+        if (ticks < 0) ticks = 0;
+        return formatTicks(ticks) + " (" + ticks + "t)";
     }
 
     public static String formatMillis(long millis) {
@@ -86,7 +88,6 @@ public final class DurationParser {
         remaining %= MILLIS_MINUTE;
         long seconds = remaining / MILLIS_SECOND;
         remaining %= MILLIS_SECOND;
-        long ticks = remaining / 50L;
         append(builder, years, "y");
         append(builder, months, "mo");
         append(builder, weeks, "w");
@@ -94,11 +95,9 @@ public final class DurationParser {
         append(builder, hours, "h");
         append(builder, minutes, "min");
         append(builder, seconds, "s");
-        if (builder.isEmpty() || ticks > 0 && millis < MILLIS_SECOND) {
-            append(builder, ticks, "t");
-        }
+        append(builder, remaining, "ms");
         if (builder.isEmpty()) {
-            return "0s";
+            return "0ms";
         }
         return builder.toString();
     }
